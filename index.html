@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SınıfLab</title>
 <link href="https://fonts.googleapis.com/css2?family=Clash+Display:wght@400;500;600;700&family=Cabinet+Grotesk:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+<script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
+
 <style>
   :root {
     --ink: #0f0e17;
@@ -167,6 +171,7 @@
 
   /* ── CONTENT ── */
   .content { flex: 1; padding: 32px 28px; max-width: 1100px; margin: 0 auto; width: 100%; }
+
   /* ── SECTION HEADER ── */
   .section-head {
     display: flex; align-items: flex-end; justify-content: space-between;
@@ -466,7 +471,6 @@
 </head>
 <body>
 
-<!-- ══════════ LOGIN ══════════ -->
 <div class="login-wrap" id="loginWrap">
   <div class="login-box">
     <div class="login-logo">
@@ -479,7 +483,6 @@
       <div class="role-tab" onclick="switchRole('student')" id="rt-student">📖 Öğrenci</div>
     </div>
 
-    <!-- Admin login -->
     <div id="admin-login-form">
       <div class="form-group">
         <label class="form-label">Admin Şifresi</label>
@@ -491,7 +494,6 @@
       <button class="btn btn-primary" onclick="loginAdmin()">Giriş Yap →</button>
     </div>
 
-    <!-- Student login -->
     <div id="student-login-form" class="hidden">
       <div class="form-group">
         <label class="form-label">Adın</label>
@@ -506,10 +508,8 @@
   </div>
 </div>
 
-<!-- ══════════ APP ══════════ -->
 <div class="app" id="app">
 
-  <!-- Topbar -->
   <header class="topbar">
     <div class="topbar-brand">Sınıf<span>Lab</span></div>
     <div class="topbar-right">
@@ -521,17 +521,14 @@
     </div>
   </header>
 
-  <!-- Admin nav -->
   <nav class="admin-nav hidden" id="adminNav">
     <div class="admin-nav-item active" onclick="adminTab('lessons')" id="at-lessons">📖 Dersler</div>
     <div class="admin-nav-item" onclick="adminTab('settings')" id="at-settings">⚙️ Ayarlar</div>
     <div class="admin-nav-item" onclick="adminTab('history')" id="at-history">📊 Sınav Geçmişi</div>
   </nav>
 
-  <!-- PAGES -->
   <div class="content">
 
-    <!-- ── ADMIN: LESSONS ── -->
     <div id="pg-lessons">
       <div class="section-head">
         <div>
@@ -544,7 +541,6 @@
       <div class="grid-auto" id="lessons-grid"></div>
     </div>
 
-    <!-- ── ADMIN: LESSON DETAIL ── -->
     <div id="pg-lesson-detail" class="hidden">
       <div class="section-head">
         <div>
@@ -560,7 +556,6 @@
       <div id="ld-questions"></div>
     </div>
 
-    <!-- ── ADMIN: SETTINGS ── -->
     <div id="pg-settings" class="hidden">
       <div class="section-head">
         <div class="section-title">Ayarlar</div>
@@ -587,7 +582,6 @@
       </div>
     </div>
 
-    <!-- ── ADMIN: HISTORY ── -->
     <div id="pg-history" class="hidden">
       <div class="section-head">
         <div class="section-title">Sınav Geçmişi</div>
@@ -596,7 +590,6 @@
       <div id="history-list"></div>
     </div>
 
-    <!-- ── STUDENT: HOME ── -->
     <div id="pg-student-home" class="hidden">
       <div class="section-head">
         <div>
@@ -607,7 +600,6 @@
       <div class="student-grid" id="student-lessons-grid"></div>
     </div>
 
-    <!-- ── EXAM ── -->
     <div id="pg-exam" class="hidden">
       <div class="exam-bar">
         <div class="exam-bar-info">
@@ -630,7 +622,6 @@
       </div>
     </div>
 
-    <!-- ── RESULT ── -->
     <div id="pg-result" class="hidden">
       <div class="result-wrap">
         <div class="result-box">
@@ -659,7 +650,6 @@
       </div>
     </div>
 
-    <!-- ── REVIEW ── -->
     <div id="pg-review" class="hidden">
       <div class="section-head">
         <div class="section-title">Sınav İncelemesi</div>
@@ -668,13 +658,7 @@
       <div id="review-list"></div>
     </div>
 
-  </div><!-- /content -->
-</div><!-- /app -->
-
-<!-- ══════════ MODALS ══════════ -->
-
-<!-- Add Lesson -->
-<div class="overlay" id="mo-lesson">
+  </div></div><div class="overlay" id="mo-lesson">
   <div class="modal modal-md">
     <div class="modal-title">📖 Yeni Ders</div>
     <div class="form-group">
@@ -684,7 +668,18 @@
     <div class="form-group">
       <label class="form-label">Emoji / İkon</label>
       <div class="flex gap-2" style="flex-wrap:wrap;margin-bottom:8px">
-        {['📐','🔬','📜','🌍','💻','🎨','🎵','⚗️','📊','🧬','🏛️','📚'].map(e=>`<span style="font-size:22px;cursor:pointer" onclick="pickEmoji('${e}')">${e}</span>`).join('')}
+        <span style="font-size:22px;cursor:pointer" onclick="pickEmoji('📐')">📐</span>
+        <span style="font-size:22px;cursor:pointer" onclick="pickEmoji('🔬')">🔬</span>
+        <span style="font-size:22px;cursor:pointer" onclick="pickEmoji('📜')">📜</span>
+        <span style="font-size:22px;cursor:pointer" onclick="pickEmoji('🌍')">🌍</span>
+        <span style="font-size:22px;cursor:pointer" onclick="pickEmoji('💻')">💻</span>
+        <span style="font-size:22px;cursor:pointer" onclick="pickEmoji('🎨')">🎨</span>
+        <span style="font-size:22px;cursor:pointer" onclick="pickEmoji('🎵')">🎵</span>
+        <span style="font-size:22px;cursor:pointer" onclick="pickEmoji('⚗️')">⚗️</span>
+        <span style="font-size:22px;cursor:pointer" onclick="pickEmoji('📊')">📊</span>
+        <span style="font-size:22px;cursor:pointer" onclick="pickEmoji('🧬')">🧬</span>
+        <span style="font-size:22px;cursor:pointer" onclick="pickEmoji('🏛️')">🏛️</span>
+        <span style="font-size:22px;cursor:pointer" onclick="pickEmoji('📚')">📚</span>
       </div>
       <input type="text" class="form-input" id="le-input" value="📚" placeholder="Emoji seç veya yaz">
     </div>
@@ -699,7 +694,6 @@
   </div>
 </div>
 
-<!-- Add Question -->
 <div class="overlay" id="mo-question">
   <div class="modal modal-lg">
     <div class="modal-title">❓ Soru Ekle</div>
@@ -729,14 +723,12 @@
       <input type="file" id="img-file" accept="image/*" class="hidden" onchange="fileImg(this)">
     </div>
 
-    <!-- MC -->
     <div id="mc-sec" class="form-group">
       <label class="form-label">Seçenekler <span style="color:var(--text3);font-weight:400">(✓ ile doğruyu işaretle)</span></label>
       <div id="opts-wrap"></div>
       <button class="btn btn-ghost btn-sm mt-3" style="margin-top:8px" onclick="addOpt()">+ Seçenek Ekle</button>
     </div>
 
-    <!-- TF -->
     <div id="tf-sec" class="form-group hidden">
       <label class="form-label">Doğru Cevap</label>
       <div style="display:flex;gap:10px">
@@ -749,7 +741,6 @@
       </div>
     </div>
 
-    <!-- Open -->
     <div id="open-sec" class="form-group hidden">
       <label class="form-label">Cevap Anahtarı (isteğe bağlı)</label>
       <input type="text" class="form-input" id="open-answer" placeholder="Beklenen cevap...">
@@ -762,7 +753,6 @@
   </div>
 </div>
 
-<!-- Bulk Add -->
 <div class="overlay" id="mo-bulk">
   <div class="modal modal-lg">
     <div class="modal-title">📋 Toplu Soru Ekle</div>
@@ -784,7 +774,6 @@ Fotosentez nedir?"></textarea>
   </div>
 </div>
 
-<!-- Exam Config -->
 <div class="overlay" id="mo-exam-cfg">
   <div class="modal modal-md">
     <div class="modal-title">🎯 Sınav Başlat</div>
@@ -828,8 +817,23 @@ Fotosentez nedir?"></textarea>
 
 <script>
 // ═══════════════════════════════════════════
-//  STORAGE HELPERS (Shared via window.storage)
+//  FIREBASE KURULUMU VE STORAGE FONKSİYONLARI
 // ═══════════════════════════════════════════
+const firebaseConfig = {
+  apiKey: "AIzaSyDasg6VC_0YaS4BbpXK1ZVde9VYcMGXMU4",
+  authDomain: "saray-5eef6.firebaseapp.com",
+  projectId: "saray-5eef6",
+  storageBucket: "saray-5eef6.firebasestorage.app",
+  messagingSenderId: "1030899595642",
+  appId: "1:1030899595642:web:948ad7bdede16398a3bec3"
+};
+
+// Firebase Initialize (Compat Modu)
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
+const db = firebase.firestore();
+
 const KEYS = {
   adminPw: 'sl2_admin_pw',
   studentPw: 'sl2_student_pw',
@@ -838,22 +842,39 @@ const KEYS = {
   history: 'sl2_history',
 };
 
+// Firestore'dan Veri Çekme
 async function sGet(key, shared=true) {
-  try { const r = await window.storage.get(key, shared); return r ? JSON.parse(r.value) : null; }
-  catch { return null; }
+  try {
+    const collectionName = shared ? 'siniflab_public' : 'siniflab_private';
+    const docRef = db.collection(collectionName).doc(key);
+    const docSnap = await docRef.get();
+    if (docSnap.exists) {
+      return JSON.parse(docSnap.data().value);
+    }
+    return null;
+  } catch (error) {
+    console.error("Firebase Okuma Hatası:", error);
+    toast("Veriler sunucudan alınamadı!", "err");
+    return null;
+  }
 }
+
+// Firestore'a Veri Yazma
 async function sSet(key, val, shared=true) {
-  try { await window.storage.set(key, JSON.stringify(val), shared); return true; }
-  catch { return false; }
+  try {
+    const collectionName = shared ? 'siniflab_public' : 'siniflab_private';
+    const docRef = db.collection(collectionName).doc(key);
+    await docRef.set({ value: JSON.stringify(val) });
+    return true;
+  } catch (error) {
+    console.error("Firebase Yazma Hatası:", error);
+    toast("Veriler sunucuya kaydedilemedi!", "err");
+    return false;
+  }
 }
-async function sGetPrivate(key) {
-  try { const r = await window.storage.get(key, false); return r ? JSON.parse(r.value) : null; }
-  catch { return null; }
-}
-async function sSetPrivate(key, val) {
-  try { await window.storage.set(key, JSON.stringify(val), false); return true; }
-  catch { return false; }
-}
+
+async function sGetPrivate(key) { return await sGet(key, false); }
+async function sSetPrivate(key, val) { return await sSet(key, val, false); }
 
 // ═══════════════════════════════════════════
 //  STATE
@@ -888,6 +909,13 @@ function switchRole(r) {
 async function loginAdmin() {
   const pw = document.getElementById('admin-pw').value;
   if(!pw) { toast('Şifre gir!','err'); return; }
+  
+  // Basit yükleniyor durumu
+  const btn = document.querySelector('#admin-login-form button');
+  const oldText = btn.innerText;
+  btn.innerText = "Yükleniyor...";
+  btn.disabled = true;
+
   const stored = await sGetPrivate(KEYS.adminPw);
   if(!stored) {
     // First time: set password
@@ -895,12 +923,15 @@ async function loginAdmin() {
     currentAdminPw = pw;
     toast('Admin şifresi oluşturuldu ✅','ok');
   } else if(stored !== pw) {
+    btn.innerText = oldText; btn.disabled = false;
     toast('Yanlış şifre!','err'); return;
   } else {
     currentAdminPw = pw;
   }
   role = 'admin';
   await loadData();
+  
+  btn.innerText = oldText; btn.disabled = false;
   enterApp();
 }
 
@@ -909,12 +940,27 @@ async function loginStudent() {
   const pw = document.getElementById('student-pw').value;
   if(!name) { toast('Adını gir!','err'); return; }
   if(!pw) { toast('Sınıf şifresini gir!','err'); return; }
+
+  const btn = document.querySelector('#student-login-form button');
+  const oldText = btn.innerText;
+  btn.innerText = "Bağlanıyor...";
+  btn.disabled = true;
+
   const stored = await sGet(KEYS.studentPw);
-  if(!stored) { toast('Henüz sınıf şifresi belirlenmemiş. Öğretmenine sor.','err'); return; }
-  if(stored !== pw) { toast('Yanlış şifre!','err'); return; }
+  if(!stored) { 
+    btn.innerText = oldText; btn.disabled = false;
+    toast('Henüz sınıf şifresi belirlenmemiş. Öğretmenine sor.','err'); return; 
+  }
+  if(stored !== pw) { 
+    btn.innerText = oldText; btn.disabled = false;
+    toast('Yanlış şifre!','err'); return; 
+  }
+  
   role = 'student';
   currentUser = name;
   await loadData();
+  
+  btn.innerText = oldText; btn.disabled = false;
   enterApp();
 }
 
@@ -1316,7 +1362,6 @@ function openExamCfg(lessonId){
   activeLessonId=lessonId;
   const qs=questions[lessonId]||[];
   document.getElementById('cfg-warn').textContent=`📊 Bu derste ${qs.length} soru var.`;
-  // reset cfg selections
   document.querySelectorAll('#cfg-count .cfg-item').forEach((el,i)=>el.classList.toggle('on',i===0));
   examCfg={count:5,time:0};
   openModal('mo-exam-cfg');
@@ -1482,15 +1527,12 @@ function showReview(){
 }
 
 // ═══════════════════════════════════════════
-//  MODAL
+//  MODAL & TOAST
 // ═══════════════════════════════════════════
 function openModal(id){document.getElementById(id).classList.add('open');}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
 
-// ═══════════════════════════════════════════
-//  TOAST
-// ═══════════════════════════════════════════
 function toast(msg,type='info'){
   const c=document.getElementById('toasts');
   const el=document.createElement('div');
@@ -1500,17 +1542,6 @@ function toast(msg,type='info'){
   c.appendChild(el);
   setTimeout(()=>el.remove(),3500);
 }
-
-// ═══════════════════════════════════════════
-//  EMOJI PICKER (inline render fix)
-// ═══════════════════════════════════════════
-document.addEventListener('DOMContentLoaded',()=>{
-  const emojiWrap = document.querySelector('#mo-lesson .flex');
-  if(emojiWrap && emojiWrap.innerHTML.includes('{[')) {
-    const emojis=['📐','🔬','📜','🌍','💻','🎨','🎵','⚗️','📊','🧬','🏛️','📚'];
-    emojiWrap.innerHTML = emojis.map(e=>`<span style="font-size:22px;cursor:pointer" onclick="pickEmoji('${e}')">${e}</span>`).join('');
-  }
-});
 </script>
 </body>
 </html>
