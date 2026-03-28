@@ -4,222 +4,532 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SınıfLab</title>
-<link href="https://fonts.googleapis.com/css2?family=Clash+Display:wght@400;500;600;700&family=Cabinet+Grotesk:wght@300;400;500;700&display=swap" rel="stylesheet">
-
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
 
 <style>
-  :root {
-    --ink: #0f0e17; --paper: #fffcf5; --cream: #f5f0e8; --warm: #e8e0d0;
-    --accent: #e8572a; --accent2: #2a6ee8; --accent3: #27a86e; --gold: #d4a843;
-    --text: #1a1a2e; --text2: #5a5a6e; --text3: #9a9aae; --border: #ddd8cc;
-    --shadow: rgba(15,14,23,0.08); --r: 12px; --rs: 8px;
-  }
+:root {
+  --bg: #0a0a0f;
+  --surface: #111118;
+  --surface2: #18181f;
+  --surface3: #1f1f28;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.12);
+  --text: #f0f0f5;
+  --text2: #9090a8;
+  --text3: #5a5a72;
+  --accent: #ff5f3d;
+  --accent-glow: rgba(255,95,61,0.2);
+  --accent2: #4a90ff;
+  --accent2-glow: rgba(74,144,255,0.2);
+  --accent3: #2ecc8a;
+  --accent3-glow: rgba(46,204,138,0.15);
+  --gold: #f5c842;
+  --r: 14px;
+  --rs: 9px;
+  --shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+*{box-sizing:border-box;margin:0;padding:0;}
 
-  body {
-    background: var(--paper); color: var(--text);
-    font-family: 'Cabinet Grotesk', sans-serif; min-height: 100vh;
-  }
+body{
+  background:var(--bg);color:var(--text);
+  font-family:'Sora',sans-serif;min-height:100vh;
+  background-image:
+    radial-gradient(ellipse at 10% 0%, rgba(255,95,61,0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 90% 100%, rgba(74,144,255,0.06) 0%, transparent 50%);
+}
 
-  body::before {
-    content: ''; position: fixed; inset: 0;
-    background-image: radial-gradient(circle at 20% 50%, rgba(232,87,42,0.04) 0%, transparent 50%),
-                      radial-gradient(circle at 80% 20%, rgba(42,110,232,0.04) 0%, transparent 50%);
-    pointer-events: none; z-index: 0;
-  }
+/* ── ANIMATIONS ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideIn{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:translateX(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+@keyframes shimmer{from{background-position:-200% 0}to{background-position:200% 0}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+@keyframes scaleIn{from{opacity:0;transform:scale(0.92)}to{opacity:1;transform:scale(1)}}
+@keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 
-  /* ── LOGIN ── */
-  .login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; position: relative; z-index: 1; }
-  .login-box { background: white; border: 1px solid var(--border); border-radius: 24px; padding: 48px 40px; width: 100%; max-width: 420px; box-shadow: 0 24px 80px var(--shadow); animation: fadeUp 0.5s ease; }
-  @keyframes fadeUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
-  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
-  @keyframes slideIn { from{opacity:0;transform:translateX(20px)} to{opacity:1;transform:translateX(0)} }
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:2px;}
 
-  .login-logo { text-align: center; margin-bottom: 36px; }
-  .login-logo .brand { font-family: 'Clash Display', sans-serif; font-size: 32px; font-weight: 700; color: var(--ink); }
-  .login-logo .brand span { color: var(--accent); }
-  .login-logo p { color: var(--text3); font-size: 14px; margin-top: 6px; }
+/* ── LOGIN ── */
+.login-wrap{
+  min-height:100vh;display:flex;align-items:center;justify-content:center;
+  padding:24px;position:relative;overflow:hidden;
+}
+.login-bg-grid{
+  position:absolute;inset:0;
+  background-image:linear-gradient(rgba(255,255,255,0.02) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,0.02) 1px,transparent 1px);
+  background-size:48px 48px;pointer-events:none;
+}
+.login-bg-orb{
+  position:absolute;width:600px;height:600px;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,95,61,0.12) 0%,transparent 70%);
+  top:-100px;left:-150px;pointer-events:none;
+}
+.login-bg-orb2{
+  position:absolute;width:400px;height:400px;border-radius:50%;
+  background:radial-gradient(circle,rgba(74,144,255,0.1) 0%,transparent 70%);
+  bottom:-80px;right:-80px;pointer-events:none;
+}
+.login-box{
+  background:var(--surface);border:1px solid var(--border2);
+  border-radius:24px;padding:48px 40px;width:100%;max-width:420px;
+  box-shadow:0 40px 100px rgba(0,0,0,0.6),0 0 0 1px rgba(255,255,255,0.04);
+  position:relative;z-index:1;animation:fadeUp 0.6s cubic-bezier(0.22,1,0.36,1);
+}
+.login-logo{text-align:center;margin-bottom:36px;}
+.login-logo .brand{font-size:34px;font-weight:800;letter-spacing:-1.5px;color:var(--text);}
+.login-logo .brand span{color:var(--accent);}
+.login-logo p{color:var(--text3);font-size:13px;margin-top:8px;letter-spacing:0.3px;}
 
-  .role-tabs { display: grid; grid-template-columns: 1fr 1fr; background: var(--cream); border-radius: var(--rs); padding: 4px; margin-bottom: 28px; }
-  .role-tab { padding: 10px; text-align: center; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500; color: var(--text2); transition: all 0.2s; }
-  .role-tab.active { background: white; color: var(--text); box-shadow: 0 2px 8px var(--shadow); }
+.role-tabs{
+  display:grid;grid-template-columns:1fr 1fr;
+  background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);
+  padding:4px;margin-bottom:28px;
+}
+.role-tab{
+  padding:10px;text-align:center;border-radius:7px;
+  cursor:pointer;font-size:13px;font-weight:600;color:var(--text3);
+  transition:all 0.25s;
+}
+.role-tab.active{
+  background:var(--surface3);color:var(--text);
+  box-shadow:0 2px 12px rgba(0,0,0,0.3);
+}
 
-  .form-group { margin-bottom: 16px; }
-  .form-label { display: block; font-size: 12px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: var(--text3); margin-bottom: 8px; }
-  .form-input, .form-select, .form-textarea { width: 100%; padding: 12px 16px; background: var(--cream); border: 1.5px solid var(--border); border-radius: var(--rs); font-family: 'Cabinet Grotesk', sans-serif; font-size: 15px; color: var(--text); outline: none; transition: all 0.2s; }
-  .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--accent); background: white; box-shadow: 0 0 0 3px rgba(232,87,42,0.1); }
-  .form-textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
+/* ── FORMS ── */
+.form-group{margin-bottom:16px;}
+.form-label{
+  display:block;font-size:11px;font-weight:700;letter-spacing:0.8px;
+  text-transform:uppercase;color:var(--text3);margin-bottom:8px;
+}
+.form-input,.form-select,.form-textarea{
+  width:100%;padding:11px 14px;
+  background:var(--surface2);border:1px solid var(--border2);
+  border-radius:var(--rs);font-family:'Sora',sans-serif;
+  font-size:14px;color:var(--text);outline:none;transition:all 0.2s;
+}
+.form-input:focus,.form-select:focus,.form-textarea:focus{
+  border-color:var(--accent);
+  box-shadow:0 0 0 3px var(--accent-glow);
+  background:var(--surface3);
+}
+.form-select{appearance:none;cursor:pointer;}
+.form-textarea{resize:vertical;min-height:80px;line-height:1.7;}
 
-  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 22px; border-radius: var(--rs); font-family: 'Cabinet Grotesk', sans-serif; font-size: 15px; font-weight: 700; cursor: pointer; transition: all 0.2s; border: none; outline: none; position: relative; overflow: hidden; }
-  .btn::after { content:''; position:absolute; inset:0; background:rgba(255,255,255,0); transition:background 0.2s; }
-  .btn:hover::after { background:rgba(255,255,255,0.1); }
-  .btn-primary { background: var(--accent); color: white; width: 100%; }
-  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(232,87,42,0.3); }
-  .btn-blue { background: var(--accent2); color: white; }
-  .btn-blue:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(42,110,232,0.3); }
-  .btn-green { background: var(--accent3); color: white; }
-  .btn-outline { background: transparent; color: var(--text); border: 1.5px solid var(--border); }
-  .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
-  .btn-ghost { background: transparent; color: var(--text2); }
-  .btn-ghost:hover { background: var(--cream); color: var(--text); }
-  .btn-sm { padding: 7px 14px; font-size: 13px; }
-  .btn-icon { width: 36px; height: 36px; padding: 0; }
-  
-  .divider { height: 1px; background: var(--border); margin: 20px 0; }
+/* ── BUTTONS ── */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  padding:10px 20px;border-radius:var(--rs);font-family:'Sora',sans-serif;
+  font-size:13px;font-weight:700;cursor:pointer;transition:all 0.2s;
+  border:none;outline:none;position:relative;white-space:nowrap;
+}
+.btn-primary{background:var(--accent);color:white;}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(255,95,61,0.35);}
+.btn-blue{background:var(--accent2);color:white;}
+.btn-blue:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(74,144,255,0.35);}
+.btn-green{background:var(--accent3);color:#0a0a0f;}
+.btn-green:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(46,204,138,0.3);}
+.btn-gold{background:var(--gold);color:#0a0a0f;}
+.btn-gold:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(245,200,66,0.3);}
+.btn-outline{background:transparent;color:var(--text2);border:1px solid var(--border2);}
+.btn-outline:hover{border-color:var(--accent);color:var(--accent);}
+.btn-ghost{background:transparent;color:var(--text3);}
+.btn-ghost:hover{background:var(--surface2);color:var(--text);}
+.btn-danger{background:rgba(220,53,69,0.15);color:#ff6b7a;border:1px solid rgba(220,53,69,0.2);}
+.btn-danger:hover{background:rgba(220,53,69,0.25);}
+.btn-sm{padding:6px 13px;font-size:12px;border-radius:7px;}
+.btn-xs{padding:4px 10px;font-size:11px;border-radius:6px;}
+.btn-icon{width:32px;height:32px;padding:0;border-radius:8px;}
+.btn-full{width:100%;}
 
-  /* ── APP SHELL ── */
-  .app { display: none; min-height: 100vh; flex-direction: column; position: relative; z-index: 1; }
-  .app.visible { display: flex; animation: fadeIn 0.4s ease; }
+.divider{height:1px;background:var(--border);margin:20px 0;}
 
-  .topbar { background: white; border-bottom: 1px solid var(--border); padding: 0 28px; height: 60px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 12px var(--shadow); }
-  .topbar-brand { font-family: 'Clash Display', sans-serif; font-size: 20px; font-weight: 700; color: var(--ink); }
-  .topbar-brand span { color: var(--accent); }
-  .topbar-right { display: flex; align-items: center; gap: 12px; }
-  .user-badge { display: flex; align-items: center; gap: 8px; padding: 6px 14px; background: var(--cream); border-radius: 20px; font-size: 13px; font-weight: 500; }
-  .user-dot { width: 8px; height: 8px; border-radius: 50%; }
-  .dot-admin { background: var(--accent); }
-  .dot-student { background: var(--accent2); }
+/* ── APP SHELL ── */
+.app{display:none;min-height:100vh;flex-direction:column;}
+.app.visible{display:flex;animation:fadeIn 0.4s ease;}
 
-  .admin-nav { display: flex; gap: 4px; padding: 0 28px; background: var(--cream); border-bottom: 1px solid var(--border); }
-  .admin-nav-item { padding: 12px 18px; font-size: 14px; font-weight: 500; color: var(--text2); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; margin-bottom: -1px; }
-  .admin-nav-item:hover { color: var(--text); }
-  .admin-nav-item.active { color: var(--accent); border-bottom-color: var(--accent); }
+.topbar{
+  background:rgba(17,17,24,0.85);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+  padding:0 24px;height:58px;display:flex;align-items:center;
+  justify-content:space-between;position:sticky;top:0;z-index:200;
+}
+.topbar-brand{font-size:19px;font-weight:800;letter-spacing:-0.8px;color:var(--text);}
+.topbar-brand span{color:var(--accent);}
+.topbar-right{display:flex;align-items:center;gap:10px;}
+.user-badge{
+  display:flex;align-items:center;gap:8px;padding:5px 13px;
+  background:var(--surface2);border:1px solid var(--border);border-radius:20px;
+  font-size:12px;font-weight:600;color:var(--text2);
+}
+.user-dot{width:7px;height:7px;border-radius:50%;}
+.dot-admin{background:var(--accent);}
+.dot-student{background:var(--accent2);}
 
-  .content { flex: 1; padding: 32px 28px; max-width: 1100px; margin: 0 auto; width: 100%; }
-  .section-head { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
-  .section-title { font-family: 'Clash Display', sans-serif; font-size: 26px; font-weight: 700; }
-  .section-sub { color: var(--text2); font-size: 14px; margin-top: 4px; }
-  .card { background: white; border: 1px solid var(--border); border-radius: var(--r); padding: 24px; transition: all 0.2s; }
-  .grid-auto { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+.admin-nav{
+  display:flex;gap:2px;padding:0 24px;
+  background:var(--surface);border-bottom:1px solid var(--border);
+  overflow-x:auto;
+}
+.admin-nav-item{
+  padding:13px 16px;font-size:13px;font-weight:600;color:var(--text3);
+  cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;
+  margin-bottom:-1px;white-space:nowrap;letter-spacing:0.1px;
+}
+.admin-nav-item:hover{color:var(--text);}
+.admin-nav-item.active{color:var(--accent);border-bottom-color:var(--accent);}
 
-  /* ── LESSONS ── */
-  .lesson-card { background: white; border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; transition: all 0.25s; cursor: pointer; }
-  .lesson-card:hover { box-shadow: 0 12px 40px var(--shadow); transform: translateY(-3px); border-color: rgba(232,87,42,0.3); }
-  .lc-stripe { height: 6px; }
-  .lc-body { padding: 20px; }
-  .lc-emoji { font-size: 32px; margin-bottom: 12px; display: block; }
-  .lc-name { font-family: 'Clash Display', sans-serif; font-size: 17px; font-weight: 700; margin-bottom: 4px; }
-  .lc-desc { font-size: 13px; color: var(--text3); margin-bottom: 12px; min-height: 18px; }
-  .lc-meta { display: flex; gap: 12px; font-size: 12px; color: var(--text2); margin-bottom: 14px; }
-  .lc-actions { display: flex; gap: 8px; }
+.content{flex:1;padding:28px 24px;max-width:1120px;margin:0 auto;width:100%;}
 
-  /* ── QUESTIONS ── */
-  .q-item { background: var(--cream); border: 1px solid var(--border); border-radius: var(--rs); padding: 16px 18px; margin-bottom: 8px; display: flex; gap: 14px; align-items: flex-start; transition: border-color 0.2s; animation: slideIn 0.3s ease; }
-  .q-item:hover { border-color: var(--accent); }
-  .q-num { width: 28px; height: 28px; background: var(--accent); color: white; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
-  .q-body { flex: 1; min-width: 0; }
-  .q-type-tag { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
-  .tag-mc { background: rgba(232,87,42,0.12); color: var(--accent); }
-  .tag-tf { background: rgba(42,110,232,0.12); color: var(--accent2); }
-  .tag-open { background: rgba(39,168,110,0.12); color: var(--accent3); }
-  .q-text-preview { font-size: 14px; line-height: 1.5; }
-  .q-img-thumb { width: 60px; height: 40px; object-fit: cover; border-radius: 6px; margin-top: 6px; display: block; }
-  .q-opts-preview { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
-  .q-opt-tag { padding: 3px 8px; border-radius: 20px; font-size: 11px; border: 1px solid var(--border); color: var(--text2); }
-  .q-opt-tag.correct { border-color: var(--accent3); color: var(--accent3); background: rgba(39,168,110,0.06); }
+/* ── SECTION HEAD ── */
+.section-head{
+  display:flex;align-items:flex-start;justify-content:space-between;
+  margin-bottom:24px;flex-wrap:wrap;gap:12px;
+}
+.section-title{font-size:24px;font-weight:800;letter-spacing:-0.8px;color:var(--text);}
+.section-sub{color:var(--text3);font-size:13px;margin-top:4px;}
 
-  .upload-zone { border: 2px dashed var(--border); border-radius: var(--r); padding: 28px 20px; text-align: center; cursor: pointer; transition: all 0.2s; background: var(--cream); }
-  .upload-zone:hover, .upload-zone.drag { border-color: var(--accent); background: rgba(232,87,42,0.03); }
-  .upload-zone .uz-icon { font-size: 36px; margin-bottom: 8px; }
-  .upload-zone .uz-text { font-size: 13px; color: var(--text2); }
-  .img-preview { max-width: 180px; max-height: 110px; border-radius: var(--rs); margin: 10px auto 0; display: block; object-fit: cover; }
-  .opt-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
-  .opt-correct-btn { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--border); background: transparent; cursor: pointer; font-size: 13px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; flex-shrink: 0; }
-  .opt-correct-btn.on { border-color: var(--accent3); background: rgba(39,168,110,0.1); }
+/* ── CARDS ── */
+.card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r);padding:22px;transition:all 0.2s;
+}
+.card:hover{border-color:var(--border2);}
 
-  /* ── MODALS ── */
-  .overlay { position: fixed; inset: 0; background: rgba(15,14,23,0.5); backdrop-filter: blur(4px); z-index: 500; display: flex; align-items: center; justify-content: center; padding: 20px; opacity: 0; pointer-events: none; transition: opacity 0.25s; }
-  .overlay.open { opacity: 1; pointer-events: all; }
-  .modal { background: white; border: 1px solid var(--border); border-radius: 20px; padding: 32px; width: 100%; max-height: 90vh; overflow-y: auto; transform: scale(0.95) translateY(10px); transition: transform 0.25s; box-shadow: 0 40px 100px rgba(15,14,23,0.2); }
-  .modal-sm { max-width: 480px; } .modal-md { max-width: 580px; } .modal-lg { max-width: 780px; }
-  .overlay.open .modal { transform: scale(1) translateY(0); }
-  .modal-title { font-family: 'Clash Display', sans-serif; font-size: 22px; font-weight: 700; margin-bottom: 24px; }
-  .modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border); }
+/* ── STATS ── */
+.stats-row{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));
+  gap:12px;margin-bottom:24px;
+}
+.stat-box{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r);padding:18px 20px;position:relative;overflow:hidden;
+  transition:border-color 0.2s;
+}
+.stat-box:hover{border-color:var(--border2);}
+.stat-box::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:var(--r) var(--r) 0 0;
+}
+.sb-red::before{background:var(--accent);}
+.sb-blue::before{background:var(--accent2);}
+.sb-green::before{background:var(--accent3);}
+.sb-gold::before{background:var(--gold);}
+.stat-num{font-size:30px;font-weight:800;letter-spacing:-1px;color:var(--text);}
+.stat-label{font-size:11px;color:var(--text3);margin-top:3px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;}
 
-  /* ── EXAM UI ── */
-  .exam-bar { background: white; border: 1px solid var(--border); border-radius: var(--r); padding: 20px 24px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
-  .exam-bar-info .title { font-family: 'Clash Display', sans-serif; font-size: 20px; font-weight: 700; }
-  .exam-bar-info .sub { font-size: 13px; color: var(--text2); margin-top: 3px; }
-  .prog-wrap { flex: 1; min-width: 200px; }
-  .prog-track { height: 6px; background: var(--cream); border-radius: 3px; overflow: hidden; margin-top: 8px; }
-  .prog-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 3px; transition: width 0.4s; }
-  .timer-box { text-align: center; font-family: 'Clash Display', sans-serif; font-size: 28px; font-weight: 700; color: var(--accent); min-width: 80px; }
-  .timer-box.warn { color: #e82a2a; animation: blink 1s infinite; }
-  .timer-box small { display: block; font-size: 11px; color: var(--text3); font-family: 'Cabinet Grotesk', sans-serif; }
-  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.4} }
+/* ── GRID ── */
+.grid-auto{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;}
+.grid-2{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;}
 
-  .exam-q-card { background: white; border: 1px solid var(--border); border-radius: var(--r); padding: 28px; animation: slideIn 0.3s ease; }
-  .eq-num { font-size: 12px; color: var(--text3); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
-  .eq-text { font-size: 17px; font-weight: 500; line-height: 1.7; margin-bottom: 20px; }
-  .eq-img { max-width: 100%; max-height: 260px; border-radius: var(--rs); margin-bottom: 16px; display: block; }
-  .eq-options { display: flex; flex-direction: column; gap: 10px; }
-  .eq-opt { display: flex; align-items: center; gap: 14px; padding: 14px 18px; border-radius: var(--rs); border: 1.5px solid var(--border); cursor: pointer; background: var(--cream); transition: all 0.2s; font-size: 15px; }
-  .eq-opt:hover { border-color: var(--accent); background: rgba(232,87,42,0.04); }
-  .eq-opt.sel { border-color: var(--accent2); background: rgba(42,110,232,0.06); color: var(--accent2); }
-  .eq-letter { width: 30px; height: 30px; border-radius: 50%; background: white; border: 1.5px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; }
-  .eq-opt.sel .eq-letter { background: var(--accent2); border-color: var(--accent2); color: white; }
+/* ── LESSON CARDS ── */
+.lesson-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r);overflow:hidden;transition:all 0.25s;
+}
+.lesson-card:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:0 16px 48px rgba(0,0,0,0.3);}
+.lc-stripe{height:3px;}
+.lc-body{padding:20px;}
+.lc-emoji{font-size:30px;margin-bottom:12px;display:block;}
+.lc-name{font-size:16px;font-weight:700;margin-bottom:4px;letter-spacing:-0.3px;}
+.lc-desc{font-size:12px;color:var(--text3);margin-bottom:14px;min-height:16px;}
+.lc-meta{display:flex;gap:10px;font-size:11px;color:var(--text3);margin-bottom:14px;align-items:center;}
+.lc-meta-badge{
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:5px;padding:2px 8px;font-size:11px;font-weight:600;color:var(--text2);
+}
+.lc-actions{display:flex;gap:6px;flex-wrap:wrap;}
 
-  /* ── RESULTS & HISTORY ── */
-  .result-wrap { display: flex; align-items: center; justify-content: center; padding: 40px 20px; }
-  .result-box { background: white; border: 1px solid var(--border); border-radius: 24px; padding: 48px 36px; text-align: center; max-width: 460px; width: 100%; box-shadow: 0 24px 80px var(--shadow); }
-  .result-emoji { font-size: 72px; margin-bottom: 12px; }
-  .result-score { font-family: 'Clash Display', sans-serif; font-size: 80px; font-weight: 700; line-height: 1; margin-bottom: 8px; }
-  .result-label { font-size: 16px; color: var(--text2); margin-bottom: 24px; }
-  .result-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin: 24px 0; }
-  .rs-item { background: var(--cream); border-radius: var(--rs); padding: 14px; }
-  .rs-num { font-family: 'Clash Display', sans-serif; font-size: 26px; font-weight: 700; }
-  .rs-label { font-size: 12px; color: var(--text3); margin-top: 2px; }
+/* ── QUESTIONS ── */
+.q-item{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--rs);padding:14px 16px;margin-bottom:8px;
+  display:flex;gap:12px;align-items:flex-start;
+  transition:all 0.2s;animation:slideIn 0.3s ease;
+}
+.q-item:hover{border-color:var(--border2);background:var(--surface2);}
+.q-num{
+  width:26px;height:26px;background:var(--accent);color:white;
+  border-radius:6px;display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;flex-shrink:0;font-family:'JetBrains Mono',monospace;
+}
+.q-body{flex:1;min-width:0;}
+.q-type-tag{
+  display:inline-block;padding:2px 8px;border-radius:4px;
+  font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;
+}
+.tag-mc{background:rgba(255,95,61,0.12);color:var(--accent);}
+.tag-tf{background:rgba(74,144,255,0.12);color:var(--accent2);}
+.tag-open{background:rgba(46,204,138,0.12);color:var(--accent3);}
+.q-text-preview{font-size:13px;line-height:1.6;color:var(--text2);}
+.q-img-thumb{width:50px;height:36px;object-fit:cover;border-radius:5px;margin-top:6px;border:1px solid var(--border);}
+.q-actions{display:flex;gap:5px;flex-shrink:0;}
 
-  .hist-row { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-radius: var(--rs); border: 1px solid var(--border); margin-bottom: 8px; background: white; }
-  .hist-score-box { width: 52px; height: 52px; border-radius: 10px; background: var(--cream); display: flex; align-items: center; justify-content: center; font-family: 'Clash Display', sans-serif; font-size: 17px; font-weight: 700; flex-shrink: 0; }
-  .stats-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin-bottom: 28px; }
-  .stat-box { background: white; border: 1px solid var(--border); border-radius: var(--r); padding: 18px 20px; position: relative; overflow: hidden; }
-  .stat-box::after { content:''; position:absolute; right:-10px; top:-10px; width:60px; height:60px; border-radius:50%; opacity:0.06; }
-  .sb-red::after { background: var(--accent); } .sb-blue::after { background: var(--accent2); } .sb-green::after { background: var(--accent3); }
-  .stat-num { font-family: 'Clash Display', sans-serif; font-size: 32px; font-weight: 700; }
-  .stat-label { font-size: 12px; color: var(--text3); margin-top: 3px; }
+/* ── ANNOUNCEMENTS ── */
+.ann-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r);padding:18px 20px;
+  display:flex;gap:14px;align-items:flex-start;
+  transition:all 0.2s;animation:slideIn 0.3s ease;
+  position:relative;overflow:hidden;
+}
+.ann-card::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:3px;
+}
+.ann-card.type-info::before{background:var(--accent2);}
+.ann-card.type-warn::before{background:var(--gold);}
+.ann-card.type-success::before{background:var(--accent3);}
+.ann-card.type-urgent::before{background:var(--accent);}
+.ann-icon{font-size:22px;flex-shrink:0;}
+.ann-body{flex:1;min-width:0;}
+.ann-title{font-size:14px;font-weight:700;margin-bottom:4px;}
+.ann-text{font-size:13px;color:var(--text2);line-height:1.6;}
+.ann-meta{font-size:11px;color:var(--text3);margin-top:8px;}
+.ann-actions{display:flex;gap:5px;flex-shrink:0;}
 
-  .student-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
-  .sl-card { background: white; border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; cursor: pointer; transition: all 0.25s; }
-  .sl-card:hover { transform: translateY(-3px); box-shadow: 0 12px 40px var(--shadow); border-color: rgba(42,110,232,0.3); }
-  .sl-stripe { height: 5px; } .sl-body { padding: 20px; } .sl-emoji { font-size: 36px; margin-bottom: 12px; display: block; }
-  .sl-name { font-family: 'Clash Display', sans-serif; font-size: 16px; font-weight: 700; margin-bottom: 6px; }
-  .sl-meta { font-size: 13px; color: var(--text3); }
-  .sl-start { width: 100%; margin-top: 14px; }
+.ann-banner{
+  background:linear-gradient(90deg,rgba(255,95,61,0.08),rgba(74,144,255,0.08));
+  border:1px solid var(--border);border-radius:var(--r);
+  padding:14px 18px;margin-bottom:20px;overflow:hidden;
+}
+.ann-scroll-wrap{overflow:hidden;white-space:nowrap;}
+.ann-scroll{display:inline-block;animation:marquee 18s linear infinite;}
 
-  .cfg-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
-  .cfg-item { background: var(--cream); border: 2px solid var(--border); border-radius: var(--rs); padding: 14px 10px; text-align: center; cursor: pointer; transition: all 0.2s; }
-  .cfg-item:hover { border-color: var(--accent); } .cfg-item.on { border-color: var(--accent); background: rgba(232,87,42,0.06); }
-  .cfg-item .cn { font-family: 'Clash Display', sans-serif; font-size: 22px; font-weight: 700; color: var(--accent); }
-  .cfg-item .cl { font-size: 11px; color: var(--text3); margin-top: 2px; }
+/* ── MODALS ── */
+.overlay{
+  position:fixed;inset:0;background:rgba(5,5,10,0.75);
+  backdrop-filter:blur(8px);z-index:500;
+  display:flex;align-items:center;justify-content:center;
+  padding:20px;opacity:0;pointer-events:none;transition:opacity 0.25s;
+}
+.overlay.open{opacity:1;pointer-events:all;}
+.modal{
+  background:var(--surface);border:1px solid var(--border2);
+  border-radius:20px;padding:28px;width:100%;max-height:90vh;
+  overflow-y:auto;transform:scale(0.95) translateY(10px);
+  transition:transform 0.25s cubic-bezier(0.22,1,0.36,1);
+  box-shadow:0 40px 100px rgba(0,0,0,0.6);
+}
+.modal-sm{max-width:460px;}
+.modal-md{max-width:560px;}
+.modal-lg{max-width:740px;}
+.overlay.open .modal{transform:scale(1) translateY(0);}
+.modal-title{font-size:19px;font-weight:800;margin-bottom:22px;letter-spacing:-0.5px;}
+.modal-footer{
+  display:flex;gap:8px;justify-content:flex-end;
+  margin-top:22px;padding-top:18px;border-top:1px solid var(--border);
+}
 
-  .empty { text-align: center; padding: 60px 20px; color: var(--text3); }
-  .empty .ei { font-size: 52px; margin-bottom: 14px; opacity: 0.5; }
-  .empty .et { font-size: 16px; color: var(--text2); margin-bottom: 6px; font-weight: 500; }
-  .empty .es { font-size: 13px; }
+/* ── UPLOAD ── */
+.upload-zone{
+  border:2px dashed var(--border2);border-radius:var(--r);
+  padding:24px;text-align:center;cursor:pointer;transition:all 0.2s;
+  background:var(--surface2);
+}
+.upload-zone:hover{border-color:var(--accent);background:var(--accent-glow);}
+.upload-zone .uz-icon{font-size:32px;margin-bottom:8px;}
+.upload-zone .uz-text{font-size:12px;color:var(--text3);}
+.img-preview{max-width:160px;max-height:100px;border-radius:var(--rs);margin:10px auto 0;display:block;object-fit:cover;}
+.opt-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.opt-correct-btn{
+  width:26px;height:26px;border-radius:50%;border:1.5px solid var(--border2);
+  background:transparent;cursor:pointer;font-size:12px;
+  display:flex;align-items:center;justify-content:center;transition:all 0.2s;flex-shrink:0;color:var(--text3);
+}
+.opt-correct-btn.on{border-color:var(--accent3);background:var(--accent3-glow);color:var(--accent3);}
 
-  #toasts { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
-  .toast { background: white; border: 1px solid var(--border); border-radius: var(--rs); padding: 12px 16px; font-size: 14px; display: flex; align-items: center; gap: 10px; box-shadow: 0 8px 30px var(--shadow); min-width: 240px; animation: slideIn 0.3s ease; }
-  .toast.ok { border-left: 3px solid var(--accent3); } .toast.err { border-left: 3px solid #e82a2a; } .toast.info { border-left: 3px solid var(--accent2); }
+/* ── EXAM UI ── */
+.exam-bar{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r);padding:18px 22px;margin-bottom:18px;
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;
+}
+.exam-bar-info .title{font-size:18px;font-weight:800;letter-spacing:-0.5px;}
+.exam-bar-info .sub{font-size:12px;color:var(--text3);margin-top:3px;}
+.prog-wrap{flex:1;min-width:160px;}
+.prog-track{height:4px;background:var(--surface3);border-radius:2px;overflow:hidden;margin-top:8px;}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:2px;transition:width 0.4s;}
+.timer-box{
+  text-align:center;font-family:'JetBrains Mono',monospace;
+  font-size:26px;font-weight:700;color:var(--accent);min-width:75px;
+}
+.timer-box small{display:block;font-size:10px;color:var(--text3);font-family:'Sora',sans-serif;font-weight:600;}
+.timer-box.warn{color:#ff4444;animation:blink 1s infinite;}
 
-  .hidden { display: none !important; }
-  .chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; }
-  .chip-red { background: rgba(232,87,42,0.1); color: var(--accent); } .chip-blue { background: rgba(42,110,232,0.1); color: var(--accent2); }
-  .chip-green { background: rgba(39,168,110,0.1); color: var(--accent3); } .chip-gray { background: var(--cream); color: var(--text2); }
-  .flex { display: flex; } .items-center { align-items: center; } .justify-between { justify-content: space-between; } .gap-2 { gap: 8px; } .mt-3 { margin-top: 12px; }
-  ::-webkit-scrollbar { width: 5px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: var(--warm); border-radius: 3px; }
+.exam-q-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r);padding:26px;animation:scaleIn 0.3s ease;
+}
+.eq-num{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px;font-family:'JetBrains Mono',monospace;}
+.eq-text{font-size:16px;font-weight:500;line-height:1.8;margin-bottom:20px;}
+.eq-img{max-width:100%;max-height:240px;border-radius:var(--rs);margin-bottom:16px;display:block;border:1px solid var(--border);}
+.eq-options{display:flex;flex-direction:column;gap:8px;}
+.eq-opt{
+  display:flex;align-items:center;gap:14px;padding:13px 16px;
+  border-radius:var(--rs);border:1px solid var(--border);cursor:pointer;
+  background:var(--surface2);transition:all 0.2s;font-size:14px;
+}
+.eq-opt:hover{border-color:var(--accent2);background:rgba(74,144,255,0.05);}
+.eq-opt.sel{border-color:var(--accent2);background:var(--accent2-glow);color:var(--text);}
+.eq-letter{
+  width:28px;height:28px;border-radius:7px;background:var(--surface3);
+  border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:700;flex-shrink:0;font-family:'JetBrains Mono',monospace;
+}
+.eq-opt.sel .eq-letter{background:var(--accent2);border-color:var(--accent2);color:white;}
+
+/* ── RESULTS ── */
+.result-wrap{display:flex;align-items:center;justify-content:center;padding:40px 20px;}
+.result-box{
+  background:var(--surface);border:1px solid var(--border2);
+  border-radius:24px;padding:44px 32px;text-align:center;
+  max-width:440px;width:100%;box-shadow:0 32px 80px rgba(0,0,0,0.5);
+  animation:scaleIn 0.5s cubic-bezier(0.22,1,0.36,1);
+}
+.result-emoji{font-size:64px;margin-bottom:12px;}
+.result-score{font-size:76px;font-weight:800;line-height:1;margin-bottom:8px;letter-spacing:-3px;}
+.result-label{font-size:15px;color:var(--text2);margin-bottom:22px;}
+.result-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:20px 0;}
+.rs-item{background:var(--surface2);border-radius:10px;padding:12px;border:1px solid var(--border);}
+.rs-num{font-size:24px;font-weight:800;letter-spacing:-0.5px;}
+.rs-label{font-size:11px;color:var(--text3);margin-top:2px;font-weight:600;}
+
+/* ── HISTORY ── */
+.hist-row{
+  display:flex;align-items:center;gap:12px;padding:13px 15px;
+  border-radius:var(--rs);border:1px solid var(--border);
+  margin-bottom:7px;background:var(--surface);transition:border-color 0.2s;
+}
+.hist-row:hover{border-color:var(--border2);}
+.hist-score-box{
+  width:48px;height:48px;border-radius:9px;
+  background:var(--surface2);display:flex;align-items:center;justify-content:center;
+  font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;flex-shrink:0;
+  border:1px solid var(--border);
+}
+.hist-info{flex:1;min-width:0;}
+.hist-name{font-size:13px;font-weight:600;}
+.hist-meta{font-size:11px;color:var(--text3);margin-top:2px;}
+
+/* ── STUDENT HOME ── */
+.sl-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r);overflow:hidden;cursor:pointer;transition:all 0.25s;
+}
+.sl-card:hover{transform:translateY(-3px);box-shadow:0 16px 48px rgba(0,0,0,0.3);border-color:var(--border2);}
+.sl-stripe{height:3px;}
+.sl-body{padding:20px;}
+.sl-emoji{font-size:32px;margin-bottom:12px;display:block;}
+.sl-name{font-size:15px;font-weight:700;margin-bottom:4px;letter-spacing:-0.3px;}
+.sl-meta{font-size:12px;color:var(--text3);margin-bottom:14px;}
+.sl-start{width:100%;margin-top:6px;}
+
+/* ── EXAM CONFIG ── */
+.cfg-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.cfg-item{
+  background:var(--surface2);border:1.5px solid var(--border);
+  border-radius:10px;padding:14px 10px;text-align:center;cursor:pointer;transition:all 0.2s;
+}
+.cfg-item:hover{border-color:var(--accent);}
+.cfg-item.on{border-color:var(--accent);background:var(--accent-glow);}
+.cfg-item .cn{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:700;color:var(--accent);}
+.cfg-item .cl{font-size:10px;color:var(--text3);margin-top:2px;font-weight:600;text-transform:uppercase;}
+
+/* ── EMPTY ── */
+.empty{text-align:center;padding:56px 20px;color:var(--text3);}
+.empty .ei{font-size:48px;margin-bottom:14px;opacity:0.4;}
+.empty .et{font-size:15px;color:var(--text2);margin-bottom:6px;font-weight:600;}
+.empty .es{font-size:12px;}
+
+/* ── TOASTS ── */
+#toasts{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px;}
+.toast{
+  background:var(--surface2);border:1px solid var(--border2);border-radius:10px;
+  padding:12px 16px;font-size:13px;display:flex;align-items:center;gap:10px;
+  box-shadow:0 8px 30px rgba(0,0,0,0.4);min-width:220px;animation:slideIn 0.3s ease;color:var(--text);
+}
+.toast.ok{border-left:3px solid var(--accent3);}
+.toast.err{border-left:3px solid #ff4444;}
+.toast.info{border-left:3px solid var(--accent2);}
+
+/* ── UTILS ── */
+.hidden{display:none!important;}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:4px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.4px;}
+.chip-red{background:rgba(255,95,61,0.12);color:var(--accent);}
+.chip-blue{background:rgba(74,144,255,0.12);color:var(--accent2);}
+.chip-green{background:rgba(46,204,138,0.12);color:var(--accent3);}
+.chip-gold{background:rgba(245,200,66,0.12);color:var(--gold);}
+.chip-gray{background:var(--surface2);color:var(--text2);}
+.flex{display:flex;}.items-center{align-items:center;}.justify-between{justify-content:space-between;}
+.gap-2{gap:8px;}.gap-1{gap:4px;}.mt-2{margin-top:8px;}.mt-3{margin-top:12px;}.mb-2{margin-bottom:8px;}
+.text-muted{color:var(--text3);}
+.mono{font-family:'JetBrains Mono',monospace;}
+.student-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;}
+
+/* ── SETTINGS ── */
+.settings-section{margin-bottom:24px;}
+.settings-section-title{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--text3);margin-bottom:12px;}
+
+/* ── TYPE BADGE ── */
+.ann-type-badge{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:3px 10px;border-radius:5px;font-size:10px;font-weight:700;
+  text-transform:uppercase;letter-spacing:0.5px;
+}
+.type-info .ann-type-badge{background:rgba(74,144,255,0.12);color:var(--accent2);}
+.type-warn .ann-type-badge{background:rgba(245,200,66,0.12);color:var(--gold);}
+.type-success .ann-type-badge{background:rgba(46,204,138,0.12);color:var(--accent3);}
+.type-urgent .ann-type-badge{background:rgba(255,95,61,0.12);color:var(--accent);}
+
+/* ── LESSON DETAIL ── */
+.ld-header{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r);padding:20px 22px;margin-bottom:20px;
+  display:flex;align-items:center;gap:16px;
+}
+.ld-emoji-big{font-size:40px;}
+.ld-info{flex:1;}
+.ld-lesson-title{font-size:20px;font-weight:800;letter-spacing:-0.5px;}
+.ld-lesson-sub{font-size:12px;color:var(--text3);margin-top:3px;}
+
+/* ── REVIEW ── */
+.review-item{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
+  padding:18px 20px;margin-bottom:10px;
+}
+.review-item.correct{border-left:3px solid var(--accent3);}
+.review-item.wrong{border-left:3px solid #ff4444;}
+.review-item.empty-ans{border-left:3px solid var(--text3);}
+
+/* RESPONSIVE */
+@media(max-width:640px){
+  .login-box{padding:32px 24px;}
+  .content{padding:20px 16px;}
+  .topbar{padding:0 16px;}
+  .admin-nav{padding:0 16px;}
+  .stats-row{grid-template-columns:repeat(2,1fr);}
+  .cfg-grid{grid-template-columns:repeat(3,1fr);}
+  .result-score{font-size:56px;}
+}
 </style>
 </head>
 <body>
 
+<!-- ── LOGIN ── -->
 <div class="login-wrap" id="loginWrap">
+  <div class="login-bg-grid"></div>
+  <div class="login-bg-orb"></div>
+  <div class="login-bg-orb2"></div>
   <div class="login-box">
     <div class="login-logo">
       <div class="brand">Sınıf<span>Lab</span></div>
-      <p>Şifre korumalı eğitim platformu</p>
+      <p>Eğitim platformu · Şifre korumalı</p>
     </div>
     <div class="role-tabs">
       <div class="role-tab active" onclick="switchRole('admin')" id="rt-admin">🎓 Öğretmen</div>
@@ -230,22 +540,23 @@
         <label class="form-label">Admin Şifresi</label>
         <input type="password" class="form-input" id="admin-pw" placeholder="••••••••" onkeydown="if(event.key==='Enter')loginAdmin()">
       </div>
-      <button class="btn btn-primary" onclick="loginAdmin()">Giriş Yap →</button>
+      <button class="btn btn-primary btn-full" onclick="loginAdmin()">Giriş Yap →</button>
     </div>
     <div id="student-login-form" class="hidden">
       <div class="form-group">
-        <label class="form-label">Adın</label>
-        <input type="text" class="form-input" id="student-name" placeholder="Adın Soyadın" onkeydown="if(event.key==='Enter')loginStudent()">
+        <label class="form-label">Adın Soyadın</label>
+        <input type="text" class="form-input" id="student-name" placeholder="Ahmet Yılmaz" onkeydown="if(event.key==='Enter')loginStudent()">
       </div>
       <div class="form-group">
         <label class="form-label">Sınıf Şifresi</label>
         <input type="password" class="form-input" id="student-pw" placeholder="Öğretmeninden al" onkeydown="if(event.key==='Enter')loginStudent()">
       </div>
-      <button class="btn btn-blue" onclick="loginStudent()" style="width:100%">Derse Gir →</button>
+      <button class="btn btn-blue btn-full" onclick="loginStudent()">Derse Gir →</button>
     </div>
   </div>
 </div>
 
+<!-- ── APP ── -->
 <div class="app" id="app">
   <header class="topbar">
     <div class="topbar-brand">Sınıf<span>Lab</span></div>
@@ -260,16 +571,19 @@
 
   <nav class="admin-nav hidden" id="adminNav">
     <div class="admin-nav-item active" onclick="adminTab('lessons')" id="at-lessons">📖 Dersler</div>
+    <div class="admin-nav-item" onclick="adminTab('announcements')" id="at-announcements">📢 Duyurular</div>
+    <div class="admin-nav-item" onclick="adminTab('history')" id="at-history">📊 Geçmiş</div>
     <div class="admin-nav-item" onclick="adminTab('settings')" id="at-settings">⚙️ Ayarlar</div>
-    <div class="admin-nav-item" onclick="adminTab('history')" id="at-history">📊 Sınav Geçmişi</div>
   </nav>
 
   <div class="content">
+
+    <!-- DERSLER -->
     <div id="pg-lessons">
       <div class="section-head">
         <div>
           <div class="section-title">Dersler</div>
-          <div class="section-sub" id="lessons-sub">0 ders yüklendi</div>
+          <div class="section-sub" id="lessons-sub">Yükleniyor…</div>
         </div>
         <button class="btn btn-primary btn-sm" onclick="openAddLesson()">+ Ders Ekle</button>
       </div>
@@ -277,6 +591,7 @@
       <div class="grid-auto" id="lessons-grid"></div>
     </div>
 
+    <!-- DERS DETAY -->
     <div id="pg-lesson-detail" class="hidden">
       <div class="section-head">
         <div>
@@ -284,46 +599,66 @@
           <div class="section-sub" id="ld-sub"></div>
         </div>
         <div class="flex gap-2">
-          <button class="btn btn-outline btn-sm" onclick="adminTab('lessons')">← Geri</button>
-          <button class="btn btn-sm" style="background:var(--cream);border:1.5px solid var(--border)" onclick="openBulkAdd()">📋 Toplu Ekle</button>
-          <button class="btn btn-blue btn-sm" onclick="openAddQuestion()">+ Soru Ekle</button>
+          <button class="btn btn-ghost btn-sm" onclick="adminTab('lessons')">← Geri</button>
+          <button class="btn btn-outline btn-sm" onclick="openEditLesson()">✏️ Dersi Düzenle</button>
+          <button class="btn btn-outline btn-sm" onclick="openBulkAdd()">📋 Toplu Ekle</button>
+          <button class="btn btn-primary btn-sm" onclick="openAddQuestion()">+ Soru Ekle</button>
         </div>
       </div>
       <div id="ld-questions"></div>
     </div>
 
+    <!-- DUYURULAR (Admin) -->
+    <div id="pg-announcements" class="hidden">
+      <div class="section-head">
+        <div>
+          <div class="section-title">Duyurular</div>
+          <div class="section-sub">Öğrencilere görünür duyurular</div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="openAddAnn()">+ Duyuru Ekle</button>
+      </div>
+      <div id="ann-list-admin"></div>
+    </div>
+
+    <!-- AYARLAR -->
     <div id="pg-settings" class="hidden">
       <div class="section-head"><div class="section-title">Ayarlar</div></div>
-      <div class="card" style="max-width:480px">
-        <div style="font-weight:700;margin-bottom:16px;font-size:16px">🔑 Şifreler</div>
-        <div class="form-group">
-          <label class="form-label">Öğrenci Sınıf Şifresi</label>
-          <div class="flex gap-2">
-            <input type="text" class="form-input" id="student-pw-setting" placeholder="Öğrencilerin kullanacağı şifre">
-            <button class="btn btn-primary btn-sm" onclick="saveStudentPw()">Kaydet</button>
+      <div class="card" style="max-width:500px">
+        <div class="settings-section">
+          <div class="settings-section-title">🔑 Şifreler</div>
+          <div class="form-group">
+            <label class="form-label">Öğrenci Sınıf Şifresi</label>
+            <div class="flex gap-2">
+              <input type="text" class="form-input" id="student-pw-setting" placeholder="Öğrencilerin kullanacağı şifre">
+              <button class="btn btn-primary btn-sm" onclick="saveStudentPw()">Kaydet</button>
+            </div>
+            <div style="font-size:12px;color:var(--text3);margin-top:6px" id="current-pw-label"></div>
           </div>
-          <div style="font-size:12px;color:var(--text3);margin-top:6px" id="current-pw-label"></div>
         </div>
         <div class="divider"></div>
-        <div style="font-weight:700;margin-bottom:16px;font-size:16px">🔐 Admin Şifresi Değiştir</div>
-        <div class="form-group">
-          <label class="form-label">Yeni Admin Şifresi</label>
-          <div class="flex gap-2">
-            <input type="password" class="form-input" id="new-admin-pw" placeholder="Yeni şifre">
-            <button class="btn btn-outline btn-sm" onclick="changeAdminPw()">Değiştir</button>
+        <div class="settings-section">
+          <div class="settings-section-title">🔐 Admin Şifresi</div>
+          <div class="form-group">
+            <label class="form-label">Yeni Admin Şifresi</label>
+            <div class="flex gap-2">
+              <input type="password" class="form-input" id="new-admin-pw" placeholder="Yeni şifre">
+              <button class="btn btn-outline btn-sm" onclick="changeAdminPw()">Değiştir</button>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
+    <!-- GEÇMİŞ -->
     <div id="pg-history" class="hidden">
       <div class="section-head">
         <div class="section-title">Sınav Geçmişi</div>
-        <button class="btn btn-outline btn-sm" onclick="clearHistory()">Geçmişi Temizle</button>
+        <button class="btn btn-danger btn-sm" onclick="clearHistory()">🗑️ Temizle</button>
       </div>
       <div id="history-list"></div>
     </div>
 
+    <!-- ÖĞRENCİ ANA SAYFA -->
     <div id="pg-student-home" class="hidden">
       <div class="section-head">
         <div>
@@ -331,9 +666,14 @@
           <div class="section-sub">Hangi derste sınav olmak istiyorsun?</div>
         </div>
       </div>
+      <!-- Duyuru bandı (öğrencilere) -->
+      <div id="student-ann-banner" class="hidden"></div>
+      <!-- Duyurular listesi öğrenci -->
+      <div id="student-ann-list" class="hidden" style="margin-bottom:24px"></div>
       <div class="student-grid" id="student-lessons-grid"></div>
     </div>
 
+    <!-- SINAV -->
     <div id="pg-exam" class="hidden">
       <div class="exam-bar">
         <div class="exam-bar-info">
@@ -349,13 +689,14 @@
       <div class="flex justify-between mt-3" style="margin-top:14px">
         <button class="btn btn-outline btn-sm" onclick="exPrev()" id="ex-prev">← Önceki</button>
         <div class="flex gap-2">
-          <button class="btn btn-outline btn-sm" onclick="exitExam()">✕ Çıkış</button>
+          <button class="btn btn-ghost btn-sm" onclick="exitExam()">✕ Çıkış</button>
           <button class="btn btn-blue btn-sm" onclick="exNext()" id="ex-next">Sonraki →</button>
           <button class="btn btn-green btn-sm hidden" onclick="finishExam()" id="ex-finish">✓ Bitir</button>
         </div>
       </div>
     </div>
 
+    <!-- SONUÇ -->
     <div id="pg-result" class="hidden">
       <div class="result-wrap">
         <div class="result-box">
@@ -364,17 +705,18 @@
           <div class="result-label" id="res-label">—</div>
           <div class="result-stats">
             <div class="rs-item"><div class="rs-num" style="color:var(--accent3)" id="res-correct">—</div><div class="rs-label">Doğru</div></div>
-            <div class="rs-item"><div class="rs-num" style="color:#e82a2a" id="res-wrong">—</div><div class="rs-label">Yanlış</div></div>
+            <div class="rs-item"><div class="rs-num" style="color:#ff4444" id="res-wrong">—</div><div class="rs-label">Yanlış</div></div>
             <div class="rs-item"><div class="rs-num" style="color:var(--text3)" id="res-empty">—</div><div class="rs-label">Boş</div></div>
           </div>
           <div class="flex gap-2" style="justify-content:center;flex-wrap:wrap">
-            <button class="btn btn-blue btn-sm" onclick="showPage('pg-student-home')">🏠 Ana Sayfa</button>
+            <button class="btn btn-blue btn-sm" onclick="showPage('pg-student-home');renderStudentHome()">🏠 Ana Sayfa</button>
             <button class="btn btn-outline btn-sm" onclick="showReview()">📝 İncele</button>
           </div>
         </div>
       </div>
     </div>
 
+    <!-- İNCELEME -->
     <div id="pg-review" class="hidden">
       <div class="section-head">
         <div class="section-title">Sınav İncelemesi</div>
@@ -382,76 +724,134 @@
       </div>
       <div id="review-list"></div>
     </div>
-  </div>
-</div>
 
+  </div><!-- /content -->
+</div><!-- /app -->
+
+<!-- ── MODALS ── -->
+
+<!-- DERS EKLE/DÜZENLE -->
 <div class="overlay" id="mo-lesson">
   <div class="modal modal-md">
-    <div class="modal-title">📖 Yeni Ders</div>
+    <div class="modal-title" id="mo-lesson-title">📖 Ders Ekle</div>
     <div class="form-group"><label class="form-label">Ders Adı *</label><input type="text" class="form-input" id="ln-input" placeholder="Örn: Matematik"></div>
     <div class="form-group"><label class="form-label">Emoji / İkon</label><input type="text" class="form-input" id="le-input" value="📚"></div>
-    <div class="form-group"><label class="form-label">Açıklama</label><input type="text" class="form-input" id="ld-input"></div>
-    <div class="modal-footer"><button class="btn btn-outline btn-sm" onclick="closeModal('mo-lesson')">İptal</button><button class="btn btn-primary btn-sm" onclick="saveLesson()">Kaydet</button></div>
+    <div class="form-group"><label class="form-label">Açıklama</label><input type="text" class="form-input" id="ld-input" placeholder="Kısa bir açıklama"></div>
+    <div class="form-group"><label class="form-label">Renk (CSS)</label><input type="text" class="form-input" id="lcolor-input" value="#ff5f3d" placeholder="#ff5f3d"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('mo-lesson')">İptal</button>
+      <button class="btn btn-primary btn-sm" onclick="saveLesson()">Kaydet</button>
+    </div>
   </div>
 </div>
 
+<!-- SORU EKLE/DÜZENLE -->
 <div class="overlay" id="mo-question">
   <div class="modal modal-lg">
-    <div class="modal-title">❓ Soru Ekle</div>
+    <div class="modal-title" id="mo-q-title">❓ Soru Ekle</div>
     <div class="form-group"><label class="form-label">Soru Tipi</label><select class="form-select" id="qt-select" onchange="updateQUI()"><option value="mc">Çoktan Seçmeli</option><option value="tf">Doğru / Yanlış</option><option value="open">Açık Uçlu</option></select></div>
-    <div class="form-group"><label class="form-label">Soru Metni</label><textarea class="form-textarea" id="qt-text"></textarea></div>
+    <div class="form-group"><label class="form-label">Soru Metni *</label><textarea class="form-textarea" id="qt-text" placeholder="Soruyu buraya yaz..."></textarea></div>
     <div class="form-group">
-      <label class="form-label">Görsel</label>
+      <label class="form-label">Görsel (opsiyonel)</label>
       <div class="upload-zone" id="img-zone" onclick="document.getElementById('img-file').click()">
         <div class="uz-icon">🖼️</div><div class="uz-text">Tıkla veya sürükle bırak</div>
         <img id="img-preview" class="img-preview hidden">
       </div>
       <input type="file" id="img-file" accept="image/*" class="hidden" onchange="fileImg(this)">
     </div>
-    <div id="mc-sec" class="form-group"><label class="form-label">Seçenekler</label><div id="opts-wrap"></div><button class="btn btn-ghost btn-sm mt-3" onclick="addOpt()">+ Ekle</button></div>
-    <div id="tf-sec" class="form-group hidden"><label class="form-label">Cevap</label><div class="flex gap-2"><div class="cfg-item" id="tf-t" onclick="pickTF('true')" style="flex:1">✅ Doğru</div><div class="cfg-item" id="tf-f" onclick="pickTF('false')" style="flex:1">❌ Yanlış</div></div></div>
-    <div id="open-sec" class="form-group hidden"><label class="form-label">Cevap Anahtarı</label><input type="text" class="form-input" id="open-answer"></div>
-    <div class="modal-footer"><button class="btn btn-outline btn-sm" onclick="closeModal('mo-question')">İptal</button><button class="btn btn-primary btn-sm" onclick="saveQuestion()">Kaydet</button></div>
+    <div id="mc-sec" class="form-group">
+      <label class="form-label">Seçenekler <span style="color:var(--accent3);font-size:10px">← ✓ tıkla = doğru cevap</span></label>
+      <div id="opts-wrap"></div>
+      <button class="btn btn-ghost btn-sm mt-2" onclick="addOpt()">+ Seçenek Ekle</button>
+    </div>
+    <div id="tf-sec" class="form-group hidden">
+      <label class="form-label">Doğru Cevap</label>
+      <div class="flex gap-2">
+        <div class="cfg-item" id="tf-t" onclick="pickTF('true')" style="flex:1"><div class="cn">✅</div><div class="cl">Doğru</div></div>
+        <div class="cfg-item" id="tf-f" onclick="pickTF('false')" style="flex:1"><div class="cn">❌</div><div class="cl">Yanlış</div></div>
+      </div>
+    </div>
+    <div id="open-sec" class="form-group hidden">
+      <label class="form-label">Cevap Anahtarı</label>
+      <input type="text" class="form-input" id="open-answer" placeholder="Beklenen cevap">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('mo-question')">İptal</button>
+      <button class="btn btn-primary btn-sm" onclick="saveQuestion()">Kaydet</button>
+    </div>
   </div>
 </div>
 
+<!-- TOPLU EKLE -->
 <div class="overlay" id="mo-bulk">
   <div class="modal modal-lg">
     <div class="modal-title">📋 Toplu Soru Ekle</div>
-    <textarea class="form-textarea" id="bulk-ta" style="min-height:180px;font-family:monospace" placeholder="Soru metni | A | B | C | D | doğru_harf"></textarea>
-    <div class="modal-footer"><button class="btn btn-outline btn-sm" onclick="closeModal('mo-bulk')">İptal</button><button class="btn btn-primary btn-sm" onclick="saveBulk()">Ekle</button></div>
+    <p style="font-size:12px;color:var(--text3);margin-bottom:12px">Format: <span class="mono" style="background:var(--surface2);padding:2px 6px;border-radius:4px">Soru | A | B | C | D | A</span> (son kısım doğru harf)</p>
+    <textarea class="form-textarea" id="bulk-ta" style="min-height:160px;font-family:'JetBrains Mono',monospace;font-size:12px" placeholder="Soru metni | A | B | C | D | A&#10;Soru 2 | Evet | Hayır | | | B"></textarea>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('mo-bulk')">İptal</button>
+      <button class="btn btn-primary btn-sm" onclick="saveBulk()">Ekle</button>
+    </div>
   </div>
 </div>
 
+<!-- SINAV AYARLARI -->
 <div class="overlay" id="mo-exam-cfg">
   <div class="modal modal-md">
     <div class="modal-title">🎯 Sınav Başlat</div>
     <div class="form-group">
       <label class="form-label">Soru Sayısı</label>
       <div class="cfg-grid" id="cfg-count">
-        <div class="cfg-item on" onclick="pickCfg(this,'count',5)"><div class="cn">5</div></div>
-        <div class="cfg-item" onclick="pickCfg(this,'count',10)"><div class="cn">10</div></div>
-        <div class="cfg-item" onclick="pickCfg(this,'count','all')"><div class="cn">Tüm</div></div>
+        <div class="cfg-item on" onclick="pickCfg(this,'count',5)"><div class="cn">5</div><div class="cl">soru</div></div>
+        <div class="cfg-item" onclick="pickCfg(this,'count',10)"><div class="cn">10</div><div class="cl">soru</div></div>
+        <div class="cfg-item" onclick="pickCfg(this,'count','all')"><div class="cn">Tüm</div><div class="cl">sorular</div></div>
       </div>
     </div>
     <div class="form-group">
       <label class="form-label">Süre</label>
       <div class="cfg-grid">
-        <div class="cfg-item on" onclick="pickCfg(this,'time',0)"><div class="cn">∞</div></div>
-        <div class="cfg-item" onclick="pickCfg(this,'time',10)"><div class="cn">10</div></div>
-        <div class="cfg-item" onclick="pickCfg(this,'time',30)"><div class="cn">30</div></div>
+        <div class="cfg-item on" onclick="pickCfg(this,'time',0)"><div class="cn">∞</div><div class="cl">süresiz</div></div>
+        <div class="cfg-item" onclick="pickCfg(this,'time',10)"><div class="cn">10</div><div class="cl">dakika</div></div>
+        <div class="cfg-item" onclick="pickCfg(this,'time',30)"><div class="cn">30</div><div class="cl">dakika</div></div>
       </div>
     </div>
-    <div class="modal-footer"><button class="btn btn-outline btn-sm" onclick="closeModal('mo-exam-cfg')">İptal</button><button class="btn btn-green" onclick="startExam()">🚀 Başlat</button></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('mo-exam-cfg')">İptal</button>
+      <button class="btn btn-green" onclick="startExam()">🚀 Başlat</button>
+    </div>
+  </div>
+</div>
+
+<!-- DUYURU EKLE/DÜZENLE -->
+<div class="overlay" id="mo-ann">
+  <div class="modal modal-md">
+    <div class="modal-title" id="mo-ann-title">📢 Duyuru Ekle</div>
+    <div class="form-group">
+      <label class="form-label">Tür</label>
+      <select class="form-select" id="ann-type">
+        <option value="info">ℹ️ Bilgi</option>
+        <option value="warn">⚠️ Uyarı</option>
+        <option value="success">✅ Başarı</option>
+        <option value="urgent">🔴 Acil</option>
+      </select>
+    </div>
+    <div class="form-group"><label class="form-label">Başlık *</label><input type="text" class="form-input" id="ann-title-input" placeholder="Duyuru başlığı"></div>
+    <div class="form-group"><label class="form-label">İçerik</label><textarea class="form-textarea" id="ann-text-input" placeholder="Duyuru detayları..."></textarea></div>
+    <div class="form-group">
+      <label class="form-label">Emoji / İkon</label>
+      <input type="text" class="form-input" id="ann-icon-input" value="📢" placeholder="📢">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('mo-ann')">İptal</button>
+      <button class="btn btn-primary btn-sm" onclick="saveAnn()">Yayınla</button>
+    </div>
   </div>
 </div>
 
 <div id="toasts"></div>
 
 <script>
-// ═══════════════════════════════════════════
-//  FIREBASE KURULUMU (Yapay zeka modülleri yok)
-// ═══════════════════════════════════════════
+// ═══ FIREBASE ═══
 const firebaseConfig = {
   apiKey: "AIzaSyDasg6VC_0YaS4BbpXK1ZVde9VYcMGXMU4",
   authDomain: "saray-5eef6.firebaseapp.com",
@@ -460,260 +860,570 @@ const firebaseConfig = {
   messagingSenderId: "1030899595642",
   appId: "1:1030899595642:web:948ad7bdede16398a3bec3"
 };
-
-if (!firebase.apps.length) {
-  firebase.initializeApp(firebaseConfig);
-}
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 const KEYS = {
-  adminPw: 'sl2_admin_pw', studentPw: 'sl2_student_pw',
-  lessons: 'sl2_lessons', questions: 'sl2_questions', history: 'sl2_history'
+  adminPw:'sl2_admin_pw', studentPw:'sl2_student_pw',
+  lessons:'sl2_lessons', questions:'sl2_questions',
+  history:'sl2_history', announcements:'sl2_announcements'
 };
 
-// Firestore Veri Çekme/Yazma
-async function sGet(key, shared=true) {
-  try {
-    const docRef = db.collection(shared ? 'siniflab_public' : 'siniflab_private').doc(key);
-    const docSnap = await docRef.get();
-    return docSnap.exists ? JSON.parse(docSnap.data().value) : null;
-  } catch (e) { console.error(e); return null; }
+async function sGet(key,shared=true){
+  try{const d=await db.collection(shared?'siniflab_public':'siniflab_private').doc(key).get();return d.exists?JSON.parse(d.data().value):null;}catch(e){return null;}
 }
-async function sSet(key, val, shared=true) {
-  try {
-    await db.collection(shared ? 'siniflab_public' : 'siniflab_private').doc(key).set({ value: JSON.stringify(val) });
-    return true;
-  } catch (e) { console.error(e); return false; }
+async function sSet(key,val,shared=true){
+  try{await db.collection(shared?'siniflab_public':'siniflab_private').doc(key).set({value:JSON.stringify(val)});return true;}catch(e){return false;}
 }
-async function sGetPrivate(key) { return await sGet(key, false); }
-async function sSetPrivate(key, val) { return await sSet(key, val, false); }
+async function sGetPrivate(k){return sGet(k,false);}
+async function sSetPrivate(k,v){return sSet(k,v,false);}
 
-// STATE
-let role = null, currentUser = null, currentAdminPw = null;
-let lessons = [], questions = {}, history = [];
-let activeLessonId = null, examState = {}, examCfg = { count:5, time:0 };
-let qImgData = null, correctOptIdx = 0, selectedTF = null, editingQuestionIndex = null;
+// ═══ STATE ═══
+let role=null,currentUser=null;
+let lessons=[],questions={},history=[],announcements=[];
+let activeLessonId=null,examState={},examCfg={count:5,time:0};
+let qImgData=null,correctOptIdx=0,selectedTF=null,editingQuestionIndex=null;
+let editingLessonId=null,editingAnnId=null;
 
-// LOGIN & APP
-function switchRole(r) {
-  document.getElementById('rt-admin').classList.toggle('active', r==='admin');
-  document.getElementById('rt-student').classList.toggle('active', r==='student');
-  document.getElementById('admin-login-form').classList.toggle('hidden', r!=='admin');
-  document.getElementById('student-login-form').classList.toggle('hidden', r!=='student');
+// ═══ LOGIN ═══
+function switchRole(r){
+  ['admin','student'].forEach(x=>{
+    document.getElementById('rt-'+x).classList.toggle('active',x===r);
+    document.getElementById(x+'-login-form').classList.toggle('hidden',x!==r);
+  });
 }
-
-async function loginAdmin() {
-  const pw = document.getElementById('admin-pw').value;
-  if(!pw) return toast('Şifre gir!','err');
-  const stored = await sGetPrivate(KEYS.adminPw);
-  if(!stored) { await sSetPrivate(KEYS.adminPw, pw); toast('Şifre oluşturuldu','ok'); }
-  else if(stored !== pw) return toast('Yanlış şifre!','err');
-  role = 'admin'; currentAdminPw = pw; await loadData(); enterApp();
+async function loginAdmin(){
+  const pw=document.getElementById('admin-pw').value;
+  if(!pw)return toast('Şifre gir!','err');
+  const stored=await sGetPrivate(KEYS.adminPw);
+  if(!stored){await sSetPrivate(KEYS.adminPw,pw);toast('İlk giriş — şifre oluşturuldu','info');}
+  else if(stored!==pw)return toast('Yanlış şifre!','err');
+  role='admin';await loadData();enterApp();
 }
-
-async function loginStudent() {
-  const name = document.getElementById('student-name').value.trim();
-  const pw = document.getElementById('student-pw').value;
-  if(!name || !pw) return toast('Tüm alanları doldur!','err');
-  const stored = await sGet(KEYS.studentPw);
-  if(!stored) return toast('Henüz sınıf şifresi yok.','err');
-  if(stored !== pw) return toast('Yanlış şifre!','err');
-  role = 'student'; currentUser = name; await loadData(); enterApp();
+async function loginStudent(){
+  const name=document.getElementById('student-name').value.trim();
+  const pw=document.getElementById('student-pw').value;
+  if(!name||!pw)return toast('Tüm alanları doldur!','err');
+  const stored=await sGet(KEYS.studentPw);
+  if(!stored)return toast('Henüz sınıf şifresi ayarlanmamış.','err');
+  if(stored!==pw)return toast('Yanlış şifre!','err');
+  role='student';currentUser=name;await loadData();enterApp();
 }
-
-function logout() {
-  role = null; currentUser = null;
+function logout(){
+  role=null;currentUser=null;
   document.getElementById('app').classList.remove('visible');
-  document.getElementById('loginWrap').style.display = 'flex';
+  document.getElementById('loginWrap').style.display='flex';
 }
-
-function enterApp() {
-  document.getElementById('loginWrap').style.display = 'none';
+function enterApp(){
+  document.getElementById('loginWrap').style.display='none';
   document.getElementById('app').classList.add('visible');
-  document.getElementById('userDot').className = 'user-dot ' + (role==='admin'?'dot-admin':'dot-student');
-  document.getElementById('userLabel').textContent = role==='admin' ? '👨‍🏫 Admin' : '👤 '+currentUser;
-  document.getElementById('adminNav').classList.toggle('hidden', role!=='admin');
-  if(role==='admin') { adminTab('lessons'); loadSettings(); } else { showPage('pg-student-home'); renderStudentHome(); }
+  document.getElementById('userDot').className='user-dot '+(role==='admin'?'dot-admin':'dot-student');
+  document.getElementById('userLabel').textContent=role==='admin'?'👨‍🏫 Admin':'👤 '+currentUser;
+  document.getElementById('adminNav').classList.toggle('hidden',role!=='admin');
+  if(role==='admin'){adminTab('lessons');loadSettings();}
+  else{showPage('pg-student-home');renderStudentHome();}
 }
 
-async function loadData() {
-  lessons = (await sGet(KEYS.lessons)) || [];
-  questions = (await sGet(KEYS.questions)) || {};
-  history = (await sGet(KEYS.history)) || [];
+// ═══ DATA ═══
+async function loadData(){
+  lessons=(await sGet(KEYS.lessons))||[];
+  questions=(await sGet(KEYS.questions))||{};
+  history=(await sGet(KEYS.history))||[];
+  announcements=(await sGet(KEYS.announcements))||[];
 }
-async function saveData() { await sSet(KEYS.lessons, lessons); await sSet(KEYS.questions, questions); }
-async function saveHistory() { await sSet(KEYS.history, history); }
+async function saveData(){await sSet(KEYS.lessons,lessons);await sSet(KEYS.questions,questions);}
+async function saveHistory(){await sSet(KEYS.history,history);}
+async function saveAnnouncements(){await sSet(KEYS.announcements,announcements);}
 
-const allPages = ['pg-lessons','pg-lesson-detail','pg-settings','pg-history','pg-student-home','pg-exam','pg-result','pg-review'];
-function showPage(id) {
-  allPages.forEach(p => document.getElementById(p)?.classList.add('hidden'));
-  document.getElementById(id)?.classList.remove('hidden');
-}
+// ═══ PAGES ═══
+const allPages=['pg-lessons','pg-lesson-detail','pg-settings','pg-history','pg-student-home','pg-exam','pg-result','pg-review','pg-announcements'];
+function showPage(id){allPages.forEach(p=>document.getElementById(p)?.classList.add('hidden'));document.getElementById(id)?.classList.remove('hidden');}
 
-function adminTab(tab) {
-  ['lessons','settings','history'].forEach(t => document.getElementById('at-'+t)?.classList.toggle('active', t===tab));
-  if(tab==='lessons') { showPage('pg-lessons'); renderAdminLessons(); }
-  if(tab==='settings') { showPage('pg-settings'); }
-  if(tab==='history') { showPage('pg-history'); renderHistory(); }
-}
-
-// LESSONS
-function renderAdminLessons() {
-  const total = lessons.length, totalQ = Object.values(questions).reduce((a,b)=>a+b.length,0);
-  document.getElementById('lessons-sub').textContent = `${total} ders · ${totalQ} soru`;
-  document.getElementById('admin-stats').innerHTML = `<div class="stat-box sb-red"><div class="stat-num">${total}</div><div class="stat-label">Ders</div></div><div class="stat-box sb-blue"><div class="stat-num">${totalQ}</div><div class="stat-label">Soru</div></div>`;
-  const grid = document.getElementById('lessons-grid');
-  if(!lessons.length) return grid.innerHTML = '<div class="empty">Ders yok</div>';
-  grid.innerHTML = lessons.map(l => `<div class="lesson-card"><div class="lc-body"><span class="lc-emoji">${l.emoji}</span><div class="lc-name">${l.name}</div><div class="lc-actions"><button class="btn btn-blue btn-sm" onclick="openLessonDetail('${l.id}')">Düzenle</button><button class="btn btn-outline btn-sm" onclick="deleteLessonAdmin('${l.id}')">🗑️</button></div></div></div>`).join('');
+function adminTab(tab){
+  ['lessons','settings','history','announcements'].forEach(t=>document.getElementById('at-'+t)?.classList.toggle('active',t===tab));
+  if(tab==='lessons'){showPage('pg-lessons');renderAdminLessons();}
+  if(tab==='settings'){showPage('pg-settings');}
+  if(tab==='history'){showPage('pg-history');renderHistory();}
+  if(tab==='announcements'){showPage('pg-announcements');renderAnnAdmin();}
 }
 
-function openAddLesson() { document.getElementById('ln-input').value = ''; openModal('mo-lesson'); }
-async function saveLesson() {
-  const name = document.getElementById('ln-input').value.trim();
-  if(!name) return toast('Ders adı gir!','err');
-  const id = 'l_'+Date.now();
-  lessons.push({id, name, emoji: document.getElementById('le-input').value||'📚', created:Date.now()});
-  questions[id] = []; await saveData(); closeModal('mo-lesson'); renderAdminLessons();
-}
-async function deleteLessonAdmin(id) {
-  if(!confirm('Dersi sil?')) return;
-  lessons = lessons.filter(l=>l.id!==id); delete questions[id]; await saveData(); renderAdminLessons();
+// ═══ LESSONS ═══
+function renderAdminLessons(){
+  const total=lessons.length,totalQ=Object.values(questions).reduce((a,b)=>a+b.length,0),totalAnn=announcements.length;
+  document.getElementById('lessons-sub').textContent=`${total} ders · ${totalQ} soru`;
+  document.getElementById('admin-stats').innerHTML=`
+    <div class="stat-box sb-red"><div class="stat-num">${total}</div><div class="stat-label">Ders</div></div>
+    <div class="stat-box sb-blue"><div class="stat-num">${totalQ}</div><div class="stat-label">Soru</div></div>
+    <div class="stat-box sb-green"><div class="stat-num">${history.length}</div><div class="stat-label">Sınav</div></div>
+    <div class="stat-box sb-gold"><div class="stat-num">${totalAnn}</div><div class="stat-label">Duyuru</div></div>`;
+  const grid=document.getElementById('lessons-grid');
+  if(!lessons.length)return grid.innerHTML='<div class="empty"><div class="ei">📭</div><div class="et">Henüz ders yok</div><div class="es">+ Ders Ekle butonuna tıkla</div></div>';
+  grid.innerHTML=lessons.map(l=>{
+    const qc=(questions[l.id]||[]).length;
+    const color=l.color||'#ff5f3d';
+    return `<div class="lesson-card">
+      <div class="lc-stripe" style="background:${color}"></div>
+      <div class="lc-body">
+        <span class="lc-emoji">${l.emoji}</span>
+        <div class="lc-name">${l.name}</div>
+        <div class="lc-desc">${l.desc||''}</div>
+        <div class="lc-meta">
+          <span class="lc-meta-badge">${qc} soru</span>
+          ${l.created?`<span style="font-size:10px;color:var(--text3)">${new Date(l.created).toLocaleDateString('tr')}</span>`:''}
+        </div>
+        <div class="lc-actions">
+          <button class="btn btn-blue btn-sm" onclick="openLessonDetail('${l.id}')">📝 Sorular</button>
+          <button class="btn btn-outline btn-sm" onclick="openEditLesson('${l.id}')">✏️</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteLessonAdmin('${l.id}')">🗑️</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
 }
 
-// LESSON DETAIL & QUESTIONS
-function openLessonDetail(id) {
-  activeLessonId = id; const l = lessons.find(x=>x.id===id);
-  document.getElementById('ld-title').textContent = l.emoji+' '+l.name;
-  showPage('pg-lesson-detail'); renderLDQuestions();
+function openAddLesson(){
+  editingLessonId=null;
+  document.getElementById('mo-lesson-title').textContent='📖 Ders Ekle';
+  document.getElementById('ln-input').value='';
+  document.getElementById('le-input').value='📚';
+  document.getElementById('ld-input').value='';
+  document.getElementById('lcolor-input').value='#ff5f3d';
+  openModal('mo-lesson');
 }
-function renderLDQuestions() {
-  const qs = questions[activeLessonId] || [];
-  document.getElementById('ld-questions').innerHTML = qs.length ? qs.map((q,i) => `<div class="q-item"><div class="q-num">${i+1}</div><div class="q-body"><div class="q-text-preview">${q.text}</div></div><button class="btn btn-sm btn-outline" onclick="deleteQ(${i})">✕</button></div>`).join('') : '<div class="empty">Soru yok</div>';
+function openEditLesson(id){
+  if(!id)id=activeLessonId;
+  const l=lessons.find(x=>x.id===id);if(!l)return;
+  editingLessonId=id;
+  document.getElementById('mo-lesson-title').textContent='✏️ Dersi Düzenle';
+  document.getElementById('ln-input').value=l.name;
+  document.getElementById('le-input').value=l.emoji;
+  document.getElementById('ld-input').value=l.desc||'';
+  document.getElementById('lcolor-input').value=l.color||'#ff5f3d';
+  openModal('mo-lesson');
 }
-async function deleteQ(i) { questions[activeLessonId].splice(i,1); await saveData(); renderLDQuestions(); }
+async function saveLesson(){
+  const name=document.getElementById('ln-input').value.trim();
+  if(!name)return toast('Ders adı gir!','err');
+  const emoji=document.getElementById('le-input').value||'📚';
+  const desc=document.getElementById('ld-input').value.trim();
+  const color=document.getElementById('lcolor-input').value||'#ff5f3d';
+  if(editingLessonId){
+    const l=lessons.find(x=>x.id===editingLessonId);
+    if(l){l.name=name;l.emoji=emoji;l.desc=desc;l.color=color;}
+    toast('Ders güncellendi','ok');
+  } else {
+    const id='l_'+Date.now();
+    lessons.push({id,name,emoji,desc,color,created:Date.now()});
+    questions[id]=[];
+    toast('Ders eklendi','ok');
+  }
+  await saveData();closeModal('mo-lesson');
+  if(role==='admin'){renderAdminLessons();}
+  if(activeLessonId===editingLessonId||!editingLessonId){
+    const l=lessons.find(x=>x.id===(editingLessonId||activeLessonId));
+    if(l&&document.getElementById('pg-lesson-detail').classList.contains('hidden')===false){
+      document.getElementById('ld-title').textContent=l.emoji+' '+l.name;
+    }
+  }
+}
+async function deleteLessonAdmin(id){
+  if(!confirm('Bu dersi ve tüm sorularını silmek istiyorsan emin ol.'))return;
+  lessons=lessons.filter(l=>l.id!==id);delete questions[id];
+  await saveData();renderAdminLessons();toast('Ders silindi','ok');
+}
 
-function openAddQuestion() {
-  editingQuestionIndex = null; qImgData=null;
-  document.getElementById('qt-text').value=''; document.getElementById('img-preview').classList.add('hidden');
-  resetOpts(); updateQUI(); openModal('mo-question');
+// ═══ LESSON DETAIL ═══
+function openLessonDetail(id){
+  activeLessonId=id;
+  const l=lessons.find(x=>x.id===id);
+  document.getElementById('ld-title').textContent=l.emoji+' '+l.name;
+  document.getElementById('ld-sub').textContent=`${(questions[id]||[]).length} soru`;
+  showPage('pg-lesson-detail');renderLDQuestions();
 }
-function updateQUI() {
-  const t = document.getElementById('qt-select').value;
-  document.getElementById('mc-sec').classList.toggle('hidden', t!=='mc');
-  document.getElementById('tf-sec').classList.toggle('hidden', t!=='tf');
-  document.getElementById('open-sec').classList.toggle('hidden', t!=='open');
+
+function renderLDQuestions(){
+  const qs=questions[activeLessonId]||[];
+  document.getElementById('ld-sub').textContent=`${qs.length} soru`;
+  if(!qs.length){
+    document.getElementById('ld-questions').innerHTML='<div class="empty"><div class="ei">❓</div><div class="et">Henüz soru yok</div><div class="es">Soru ekle butonuna tıkla</div></div>';
+    return;
+  }
+  document.getElementById('ld-questions').innerHTML=qs.map((q,i)=>{
+    const typeMap={mc:'Çoktan Seçmeli',tf:'D/Y',open:'Açık Uçlu'};
+    const typeClass={mc:'tag-mc',tf:'tag-tf',open:'tag-open'};
+    return `<div class="q-item">
+      <div class="q-num">${i+1}</div>
+      <div class="q-body">
+        <span class="q-type-tag ${typeClass[q.type]||'tag-mc'}">${typeMap[q.type]||q.type}</span>
+        <div class="q-text-preview">${q.text}</div>
+        ${q.img?`<img src="${q.img}" class="q-img-thumb">`:''}
+        ${q.type==='mc'&&q.options?`<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px">${q.options.map((o,oi)=>`<span style="padding:2px 8px;border-radius:4px;font-size:11px;border:1px solid var(--border);color:${oi===q.correct?'var(--accent3)':'var(--text3)'};background:${oi===q.correct?'var(--accent3-glow)':'transparent'}">${String.fromCharCode(65+oi)}) ${o}</span>`).join('')}</div>`:''}
+      </div>
+      <div class="q-actions">
+        <button class="btn btn-outline btn-sm btn-icon" onclick="openEditQuestion(${i})" title="Düzenle">✏️</button>
+        <button class="btn btn-danger btn-sm btn-icon" onclick="deleteQ(${i})" title="Sil">🗑️</button>
+      </div>
+    </div>`;
+  }).join('');
 }
-function resetOpts() { const w=document.getElementById('opts-wrap'); w.innerHTML=''; correctOptIdx=0; for(let i=0;i<4;i++) addOpt(); }
-function addOpt(v='') {
-  const w=document.getElementById('opts-wrap'), i=w.children.length, d=document.createElement('div'); d.className='opt-row';
-  d.innerHTML=`<button class="opt-correct-btn${i===correctOptIdx?' on':''}" onclick="setCorrect(${i},this)">✓</button><input type="text" class="form-input" style="flex:1" value="${v}">`;
+
+async function deleteQ(i){
+  if(!confirm('Bu soruyu sil?'))return;
+  questions[activeLessonId].splice(i,1);await saveData();renderLDQuestions();toast('Soru silindi','ok');
+}
+
+// ═══ QUESTION MODAL ═══
+function openAddQuestion(){
+  editingQuestionIndex=null;qImgData=null;
+  document.getElementById('mo-q-title').textContent='❓ Soru Ekle';
+  document.getElementById('qt-text').value='';
+  document.getElementById('img-preview').classList.add('hidden');
+  document.getElementById('open-answer').value='';
+  document.getElementById('ann-type') && (document.getElementById('ann-type').value='info');
+  resetOpts();updateQUI();openModal('mo-question');
+}
+function openEditQuestion(i){
+  const q=questions[activeLessonId][i];if(!q)return;
+  editingQuestionIndex=i;qImgData=q.img||null;
+  document.getElementById('mo-q-title').textContent='✏️ Soruyu Düzenle';
+  document.getElementById('qt-select').value=q.type;
+  document.getElementById('qt-text').value=q.text;
+  if(q.img){document.getElementById('img-preview').src=q.img;document.getElementById('img-preview').classList.remove('hidden');}
+  else{document.getElementById('img-preview').classList.add('hidden');}
+  updateQUI();
+  if(q.type==='mc'){
+    resetOpts();
+    const opts=q.options||[];
+    document.getElementById('opts-wrap').innerHTML='';
+    correctOptIdx=q.correct||0;
+    opts.forEach((o,oi)=>addOpt(o,oi===q.correct));
+    document.querySelectorAll('.opt-correct-btn').forEach((b,bi)=>b.classList.toggle('on',bi===q.correct));
+  } else if(q.type==='tf'){
+    selectedTF=q.correct;
+    document.getElementById('tf-t').classList.toggle('on',q.correct==='true');
+    document.getElementById('tf-f').classList.toggle('on',q.correct==='false');
+  } else {
+    document.getElementById('open-answer').value=q.answer||'';
+  }
+  openModal('mo-question');
+}
+function updateQUI(){
+  const t=document.getElementById('qt-select').value;
+  document.getElementById('mc-sec').classList.toggle('hidden',t!=='mc');
+  document.getElementById('tf-sec').classList.toggle('hidden',t!=='tf');
+  document.getElementById('open-sec').classList.toggle('hidden',t!=='open');
+}
+function resetOpts(){const w=document.getElementById('opts-wrap');w.innerHTML='';correctOptIdx=0;for(let i=0;i<4;i++)addOpt('');}
+function addOpt(v='',isCorrect=false){
+  const w=document.getElementById('opts-wrap'),i=w.children.length,d=document.createElement('div');
+  d.className='opt-row';
+  d.innerHTML=`<button class="opt-correct-btn${isCorrect?' on':''}" onclick="setCorrect(${i},this)" title="Doğru cevap">✓</button><input type="text" class="form-input" style="flex:1" value="${v}" placeholder="Seçenek ${String.fromCharCode(65+i)}">`;
   w.appendChild(d);
 }
-function setCorrect(i) { correctOptIdx=i; document.querySelectorAll('.opt-correct-btn').forEach((b,bi)=>b.classList.toggle('on',bi===i)); }
-function pickTF(v) { selectedTF=v; document.getElementById('tf-t').classList.toggle('on',v==='true'); document.getElementById('tf-f').classList.toggle('on',v==='false'); }
-function fileImg(inp) { if(inp.files[0]){ const r=new FileReader(); r.onload=e=>{qImgData=e.target.result; document.getElementById('img-preview').src=qImgData; document.getElementById('img-preview').classList.remove('hidden');}; r.readAsDataURL(inp.files[0]); } }
+function setCorrect(i){correctOptIdx=i;document.querySelectorAll('.opt-correct-btn').forEach((b,bi)=>b.classList.toggle('on',bi===i));}
+function pickTF(v){selectedTF=v;document.getElementById('tf-t').classList.toggle('on',v==='true');document.getElementById('tf-f').classList.toggle('on',v==='false');}
+function fileImg(inp){if(inp.files[0]){const r=new FileReader();r.onload=e=>{qImgData=e.target.result;document.getElementById('img-preview').src=qImgData;document.getElementById('img-preview').classList.remove('hidden');};r.readAsDataURL(inp.files[0]);}}
 
-async function saveQuestion() {
-  const type=document.getElementById('qt-select').value, text=document.getElementById('qt-text').value.trim();
+async function saveQuestion(){
+  const type=document.getElementById('qt-select').value,text=document.getElementById('qt-text').value.trim();
+  if(!text)return toast('Soru metnini gir!','err');
   let q={type,text,img:qImgData};
   if(type==='mc'){
     const opts=[...document.querySelectorAll('#opts-wrap input')].map(i=>i.value.trim()).filter(Boolean);
-    q.options=opts; q.correct=Math.min(correctOptIdx,opts.length-1);
-  } else if(type==='tf') q.correct=selectedTF; else q.answer=document.getElementById('open-answer').value;
-  
-  questions[activeLessonId].push(q); await saveData(); closeModal('mo-question'); renderLDQuestions();
+    if(!opts.length)return toast('En az bir seçenek gir!','err');
+    q.options=opts;q.correct=Math.min(correctOptIdx,opts.length-1);
+  } else if(type==='tf'){
+    if(!selectedTF)return toast('Doğru/Yanlış seç!','err');
+    q.correct=selectedTF;
+  } else {
+    q.answer=document.getElementById('open-answer').value;
+  }
+  if(editingQuestionIndex!==null){
+    questions[activeLessonId][editingQuestionIndex]=q;
+    toast('Soru güncellendi','ok');
+  } else {
+    questions[activeLessonId].push(q);
+    toast('Soru eklendi','ok');
+  }
+  await saveData();closeModal('mo-question');renderLDQuestions();
 }
 
-// BULK ADD
+// ═══ BULK ADD ═══
 function openBulkAdd(){document.getElementById('bulk-ta').value='';openModal('mo-bulk');}
 async function saveBulk(){
   const lines=document.getElementById('bulk-ta').value.split('\n').filter(Boolean);
+  let added=0;
   lines.forEach(l=>{
     const p=l.split('|').map(x=>x.trim());
-    if(p.length>=6) questions[activeLessonId].push({type:'mc',text:p[0],options:p.slice(1,-1),correct:p[p.length-1].toUpperCase().charCodeAt(0)-65});
+    if(p.length>=3){
+      const lastPart=p[p.length-1];
+      const correct=lastPart.toUpperCase().charCodeAt(0)-65;
+      const opts=p.slice(1,-1).filter(Boolean);
+      if(opts.length>0){
+        questions[activeLessonId].push({type:'mc',text:p[0],options:opts,correct:Math.min(correct,opts.length-1)});
+        added++;
+      }
+    }
   });
-  await saveData(); closeModal('mo-bulk'); renderLDQuestions();
+  if(!added)return toast('Geçerli soru bulunamadı','err');
+  await saveData();closeModal('mo-bulk');renderLDQuestions();toast(`${added} soru eklendi`,'ok');
 }
 
-// SETTINGS & HISTORY
-async function loadSettings() { document.getElementById('current-pw-label').textContent = "Mevcut şifre: " + await sGet(KEYS.studentPw); }
-async function saveStudentPw(){ await sSet(KEYS.studentPw, document.getElementById('student-pw-setting').value); toast('Kaydedildi','ok'); loadSettings();}
-async function changeAdminPw(){ await sSetPrivate(KEYS.adminPw, document.getElementById('new-admin-pw').value); toast('Değiştirildi','ok');}
-function renderHistory(){ document.getElementById('history-list').innerHTML=history.length ? history.map(h=>`<div class="hist-row"><b>${h.score}%</b> ${h.studentName} - ${h.lessonName}</div>`).join('') : 'Boş'; }
-async function clearHistory(){ history=[]; await saveHistory(); renderHistory(); }
+// ═══ ANNOUNCEMENTS ═══
+function openAddAnn(){
+  editingAnnId=null;
+  document.getElementById('mo-ann-title').textContent='📢 Duyuru Ekle';
+  document.getElementById('ann-type').value='info';
+  document.getElementById('ann-title-input').value='';
+  document.getElementById('ann-text-input').value='';
+  document.getElementById('ann-icon-input').value='📢';
+  openModal('mo-ann');
+}
+function openEditAnn(id){
+  const a=announcements.find(x=>x.id===id);if(!a)return;
+  editingAnnId=id;
+  document.getElementById('mo-ann-title').textContent='✏️ Duyuruyu Düzenle';
+  document.getElementById('ann-type').value=a.type||'info';
+  document.getElementById('ann-title-input').value=a.title;
+  document.getElementById('ann-text-input').value=a.text||'';
+  document.getElementById('ann-icon-input').value=a.icon||'📢';
+  openModal('mo-ann');
+}
+async function saveAnn(){
+  const title=document.getElementById('ann-title-input').value.trim();
+  if(!title)return toast('Başlık gir!','err');
+  const ann={
+    type:document.getElementById('ann-type').value,
+    title,
+    text:document.getElementById('ann-text-input').value.trim(),
+    icon:document.getElementById('ann-icon-input').value||'📢',
+    date:Date.now()
+  };
+  if(editingAnnId){
+    const idx=announcements.findIndex(x=>x.id===editingAnnId);
+    if(idx!==-1){ann.id=editingAnnId;announcements[idx]=ann;}
+    toast('Duyuru güncellendi','ok');
+  } else {
+    ann.id='a_'+Date.now();
+    announcements.unshift(ann);
+    toast('Duyuru yayınlandı','ok');
+  }
+  await saveAnnouncements();closeModal('mo-ann');renderAnnAdmin();
+}
+async function deleteAnn(id){
+  if(!confirm('Bu duyuruyu sil?'))return;
+  announcements=announcements.filter(a=>a.id!==id);
+  await saveAnnouncements();renderAnnAdmin();toast('Duyuru silindi','ok');
+}
+function renderAnnAdmin(){
+  const list=document.getElementById('ann-list-admin');
+  if(!announcements.length){
+    list.innerHTML='<div class="empty"><div class="ei">📭</div><div class="et">Henüz duyuru yok</div><div class="es">+ Duyuru Ekle butonuna tıkla</div></div>';
+    return;
+  }
+  const typeLabels={info:'Bilgi',warn:'Uyarı',success:'Başarı',urgent:'Acil'};
+  list.innerHTML=announcements.map(a=>`
+    <div class="ann-card type-${a.type||'info'}">
+      <div class="ann-icon">${a.icon||'📢'}</div>
+      <div class="ann-body">
+        <div class="flex items-center gap-2 mb-2">
+          <div class="ann-title">${a.title}</div>
+          <span class="ann-type-badge">${typeLabels[a.type]||a.type}</span>
+        </div>
+        ${a.text?`<div class="ann-text">${a.text}</div>`:''}
+        <div class="ann-meta">${new Date(a.date).toLocaleString('tr-TR')}</div>
+      </div>
+      <div class="ann-actions">
+        <button class="btn btn-outline btn-sm btn-icon" onclick="openEditAnn('${a.id}')" title="Düzenle">✏️</button>
+        <button class="btn btn-danger btn-sm btn-icon" onclick="deleteAnn('${a.id}')" title="Sil">🗑️</button>
+      </div>
+    </div>
+  `).join('');
+}
 
-// STUDENT HOME
+// ═══ SETTINGS & HISTORY ═══
+async function loadSettings(){
+  const pw=await sGet(KEYS.studentPw);
+  document.getElementById('current-pw-label').textContent=pw?`Mevcut: ${pw}`:'Henüz şifre yok';
+}
+async function saveStudentPw(){
+  const v=document.getElementById('student-pw-setting').value;
+  if(!v)return toast('Şifre boş olamaz','err');
+  await sSet(KEYS.studentPw,v);toast('Şifre kaydedildi','ok');loadSettings();
+}
+async function changeAdminPw(){
+  const v=document.getElementById('new-admin-pw').value;
+  if(!v)return toast('Şifre boş olamaz','err');
+  await sSetPrivate(KEYS.adminPw,v);toast('Admin şifresi değiştirildi','ok');
+}
+function renderHistory(){
+  const el=document.getElementById('history-list');
+  if(!history.length){el.innerHTML='<div class="empty"><div class="ei">📊</div><div class="et">Geçmiş boş</div></div>';return;}
+  el.innerHTML=history.map(h=>{
+    const s=h.score;const color=s>=80?'var(--accent3)':s>=50?'var(--gold)':'#ff4444';
+    return `<div class="hist-row">
+      <div class="hist-score-box" style="color:${color}">${s}%</div>
+      <div class="hist-info">
+        <div class="hist-name">${h.studentName||'—'}</div>
+        <div class="hist-meta">${h.lessonName} · ${h.date?new Date(h.date).toLocaleString('tr-TR'):''}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+async function clearHistory(){if(!confirm('Tüm geçmiş silinsin mi?'))return;history=[];await saveHistory();renderHistory();toast('Geçmiş temizlendi','ok');}
+
+// ═══ STUDENT HOME ═══
 function renderStudentHome(){
   document.getElementById('student-name-display').textContent=currentUser;
-  document.getElementById('student-lessons-grid').innerHTML=lessons.map(l=>`<div class="sl-card" onclick="openExamCfg('${l.id}')"><div class="sl-body"><span class="sl-emoji">${l.emoji}</span><div class="sl-name">${l.name}</div><button class="btn btn-sm btn-primary">Sınava Gir</button></div></div>`).join('');
+  
+  // Duyuru bandı
+  const activAnn=announcements.filter(a=>a.type);
+  const bannerEl=document.getElementById('student-ann-banner');
+  const listEl=document.getElementById('student-ann-list');
+  
+  if(activAnn.length){
+    bannerEl.classList.remove('hidden');
+    const typeIcons={info:'ℹ️',warn:'⚠️',success:'✅',urgent:'🔴'};
+    const scrollText=activAnn.map(a=>`${typeIcons[a.type]||'📢'} ${a.title}`).join('  ·  ');
+    bannerEl.innerHTML=`<div class="ann-scroll-wrap"><div class="ann-scroll">${scrollText} &nbsp;&nbsp;&nbsp; ${scrollText}</div></div>`;
+    
+    listEl.classList.remove('hidden');
+    const typeLabels={info:'Bilgi',warn:'Uyarı',success:'Başarı',urgent:'Acil'};
+    listEl.innerHTML=`<div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--text3);margin-bottom:10px;">📢 Duyurular</div>`+
+      activAnn.map(a=>`
+        <div class="ann-card type-${a.type||'info'}">
+          <div class="ann-icon">${a.icon||'📢'}</div>
+          <div class="ann-body">
+            <div class="ann-title">${a.title}</div>
+            ${a.text?`<div class="ann-text">${a.text}</div>`:''}
+            <div class="ann-meta">${new Date(a.date).toLocaleString('tr-TR')}</div>
+          </div>
+        </div>`).join('');
+  } else {
+    bannerEl.classList.add('hidden');
+    listEl.classList.add('hidden');
+  }
+  
+  const grid=document.getElementById('student-lessons-grid');
+  if(!lessons.length){grid.innerHTML='<div class="empty"><div class="ei">📭</div><div class="et">Henüz ders eklenmemiş</div></div>';return;}
+  grid.innerHTML=lessons.map(l=>{
+    const color=l.color||'#ff5f3d';
+    const qc=(questions[l.id]||[]).length;
+    return `<div class="sl-card" onclick="openExamCfg('${l.id}')">
+      <div class="sl-stripe" style="background:${color}"></div>
+      <div class="sl-body">
+        <span class="sl-emoji">${l.emoji}</span>
+        <div class="sl-name">${l.name}</div>
+        <div class="sl-meta">${qc} soru mevcut</div>
+        <button class="btn btn-primary btn-sm sl-start">Sınava Gir →</button>
+      </div>
+    </div>`;
+  }).join('');
 }
 
-// EXAM EXECUTIONS
-function openExamCfg(id){ activeLessonId=id; openModal('mo-exam-cfg'); }
-function pickCfg(el,k,v){ el.parentElement.querySelectorAll('.cfg-item').forEach(c=>c.classList.remove('on')); el.classList.add('on'); examCfg[k]=v; }
+// ═══ EXAM ═══
+function openExamCfg(id){activeLessonId=id;openModal('mo-exam-cfg');}
+function pickCfg(el,k,v){el.parentElement.querySelectorAll('.cfg-item').forEach(c=>c.classList.remove('on'));el.classList.add('on');examCfg[k]=v;}
 async function startExam(){
-  const l=lessons.find(x=>x.id===activeLessonId), qs=questions[activeLessonId]||[];
-  if(!qs.length) return toast('Soru yok','err');
-  examState={ lessonId:l.id, lessonName:l.name, questions:qs.slice(0,examCfg.count==='all'?qs.length:examCfg.count), answers:{}, current:0, elapsed:0, timeLimit:examCfg.time*60, timer:null };
-  closeModal('mo-exam-cfg'); showPage('pg-exam'); renderExamQ(); startTimer();
+  const l=lessons.find(x=>x.id===activeLessonId),qs=questions[activeLessonId]||[];
+  if(!qs.length)return toast('Bu derste soru yok','err');
+  const shuffled=[...qs].sort(()=>Math.random()-0.5);
+  examState={lessonId:l.id,lessonName:l.name,questions:shuffled.slice(0,examCfg.count==='all'?shuffled.length:examCfg.count),answers:{},current:0,elapsed:0,timeLimit:examCfg.time*60,timer:null};
+  closeModal('mo-exam-cfg');showPage('pg-exam');renderExamQ();startTimer();
 }
-
-// YEPYENİ YAPAY ZEKASIZ SINAV ARAYÜZÜ (Tertemiz)
 function renderExamQ(){
-  const {questions:qs, current:idx, answers}=examState, q=qs[idx];
+  const {questions:qs,current:idx,answers}=examState,q=qs[idx];
   document.getElementById('ex-lesson-name').textContent=examState.lessonName;
   document.getElementById('ex-sub').textContent=`Soru ${idx+1} / ${qs.length}`;
   document.getElementById('ex-prog').style.width=((idx+1)/qs.length*100)+'%';
-  
   const imgHtml=q.img?`<img src="${q.img}" class="eq-img">`:'';
   let optsHtml='';
   if(q.type==='mc'){
     optsHtml='<div class="eq-options">'+(q.options||[]).map((o,i)=>`<div class="eq-opt${answers[idx]===i?' sel':''}" onclick="pickAns(${i})"><div class="eq-letter">${String.fromCharCode(65+i)}</div>${o}</div>`).join('')+'</div>';
   } else if(q.type==='tf'){
-    optsHtml=`<div class="eq-options"><div class="eq-opt${answers[idx]==='true'?' sel':''}" onclick="pickAns('true')">✅ Doğru</div><div class="eq-opt${answers[idx]==='false'?' sel':''}" onclick="pickAns('false')">❌ Yanlış</div></div>`;
+    optsHtml=`<div class="eq-options"><div class="eq-opt${answers[idx]==='true'?' sel':''}" onclick="pickAns('true')"><div class="eq-letter">D</div> Doğru</div><div class="eq-opt${answers[idx]==='false'?' sel':''}" onclick="pickAns('false')"><div class="eq-letter">Y</div> Yanlış</div></div>`;
   } else {
-    optsHtml=`<textarea class="form-textarea" placeholder="Cevap..." onchange="pickAns(this.value)">${answers[idx]||''}</textarea>`;
+    optsHtml=`<textarea class="form-textarea" placeholder="Cevabını yaz..." onchange="pickAns(this.value)">${answers[idx]||''}</textarea>`;
   }
-  
   document.getElementById('ex-q-wrap').innerHTML=`<div class="exam-q-card"><div class="eq-num">SORU ${idx+1}</div>${imgHtml}<div class="eq-text">${q.text}</div>${optsHtml}</div>`;
   document.getElementById('ex-prev').style.visibility=idx===0?'hidden':'visible';
   document.getElementById('ex-next').classList.toggle('hidden',idx===qs.length-1);
   document.getElementById('ex-finish').classList.toggle('hidden',idx!==qs.length-1);
 }
-
-function pickAns(v){ examState.answers[examState.current]=v; renderExamQ(); }
-function exNext(){ if(examState.current<examState.questions.length-1){ examState.current++; renderExamQ(); } }
-function exPrev(){ if(examState.current>0){ examState.current--; renderExamQ(); } }
-function exitExam(){ if(confirm('Çık?')){ clearInterval(examState.timer); showPage(role==='admin'?'pg-lessons':'pg-student-home'); } }
+function pickAns(v){examState.answers[examState.current]=v;renderExamQ();}
+function exNext(){if(examState.current<examState.questions.length-1){examState.current++;renderExamQ();}}
+function exPrev(){if(examState.current>0){examState.current--;renderExamQ();}}
+function exitExam(){if(confirm('Sınavdan çıkmak istediğine emin misin?')){clearInterval(examState.timer);showPage(role==='admin'?'pg-lessons':'pg-student-home');if(role==='student')renderStudentHome();}}
 function startTimer(){
-  if(examState.timeLimit===0) return document.getElementById('ex-timer').innerHTML='∞';
+  if(examState.timeLimit===0)return document.getElementById('ex-timer').innerHTML='∞<small>süresiz</small>';
   examState.timer=setInterval(()=>{
-    examState.elapsed++; const r=examState.timeLimit-examState.elapsed;
-    if(r<=0){ clearInterval(examState.timer); finishExam(); }
-    document.getElementById('ex-timer').innerHTML=`${Math.floor(r/60)}:${(r%60).toString().padStart(2,'0')}`;
+    examState.elapsed++;const r=examState.timeLimit-examState.elapsed;
+    if(r<=0){clearInterval(examState.timer);finishExam();}
+    const el=document.getElementById('ex-timer');
+    el.innerHTML=`${Math.floor(r/60)}:${(r%60).toString().padStart(2,'0')}<small>kalan</small>`;
+    el.classList.toggle('warn',r<=60);
   },1000);
 }
-
 async function finishExam(){
   clearInterval(examState.timer);
-  let correct=0, qs=examState.questions;
-  qs.forEach((q,i)=>{ if(examState.answers[i]===q.correct || (q.type==='open'&&examState.answers[i])) correct++; });
+  let correct=0,wrong=0,empty=0;const qs=examState.questions;
+  qs.forEach((q,i)=>{
+    const ans=examState.answers[i];
+    if(ans===undefined||ans===''){empty++;}
+    else if(q.type==='open'&&ans){correct++;}
+    else if(ans===q.correct){correct++;}
+    else{wrong++;}
+  });
   const score=Math.round(correct/qs.length*100);
-  history.unshift({id:'e_'+Date.now(), lessonName:examState.lessonName, studentName:currentUser||'Admin', score, date:Date.now()});
+  const emoji=score>=90?'🏆':score>=70?'🎉':score>=50?'😊':'💪';
+  const label=score>=90?'Mükemmel!':score>=70?'Çok İyi!':score>=50?'İyi çalışma!':'Daha çok çalış!';
+  history.unshift({id:'e_'+Date.now(),lessonName:examState.lessonName,studentName:currentUser||'Admin',score,date:Date.now()});
   await saveHistory();
+  document.getElementById('res-emoji').textContent=emoji;
   document.getElementById('res-score').textContent=score+'%';
+  document.getElementById('res-label').textContent=label;
   document.getElementById('res-correct').textContent=correct;
+  document.getElementById('res-wrong').textContent=wrong;
+  document.getElementById('res-empty').textContent=empty;
+  const scoreEl=document.getElementById('res-score');
+  scoreEl.style.color=score>=70?'var(--accent3)':score>=50?'var(--gold)':'#ff4444';
   showPage('pg-result');
 }
 function showReview(){
-  document.getElementById('review-list').innerHTML=examState.questions.map((q,i)=>`<div class="exam-q-card"><b>Soru ${i+1}:</b> ${q.text}<br>Senin Cevabın: <b>${examState.answers[i]||'Boş'}</b></div>`).join('');
+  document.getElementById('review-list').innerHTML=examState.questions.map((q,i)=>{
+    const ans=examState.answers[i];
+    const isEmpty=ans===undefined||ans==='';
+    const isCorrect=!isEmpty&&(q.type==='open'?!!ans:ans===q.correct);
+    const cls=isEmpty?'empty-ans':isCorrect?'correct':'wrong';
+    const ansDisplay=isEmpty?'<span style="color:var(--text3)">Boş bırakıldı</span>':typeof ans==='number'?q.options?.[ans]||ans:ans;
+    const correctDisplay=q.type==='mc'?q.options?.[q.correct]:q.type==='tf'?q.correct:q.answer||'—';
+    return `<div class="review-item ${cls}">
+      <div style="font-size:11px;color:var(--text3);margin-bottom:6px;font-weight:700">SORU ${i+1}</div>
+      <div style="font-size:14px;margin-bottom:10px;font-weight:500">${q.text}</div>
+      <div style="font-size:12px;color:${isEmpty?'var(--text3)':isCorrect?'var(--accent3)':'#ff4444'}">
+        Senin cevabın: <b>${ansDisplay}</b>
+      </div>
+      ${!isCorrect&&!isEmpty?`<div style="font-size:12px;color:var(--accent3);margin-top:3px">Doğru cevap: <b>${correctDisplay}</b></div>`:''}
+    </div>`;
+  }).join('');
   showPage('pg-review');
 }
 
-// UTILS
+// ═══ UTILS ═══
 function openModal(id){document.getElementById(id).classList.add('open');}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
-function toast(m,t='info'){ const c=document.getElementById('toasts'), e=document.createElement('div'); e.className=`toast ${t}`; e.textContent=m; c.appendChild(e); setTimeout(()=>e.remove(),3000); }
+function toast(m,t='info'){
+  const c=document.getElementById('toasts'),e=document.createElement('div');
+  e.className=`toast ${t}`;
+  const icons={ok:'✅',err:'❌',info:'ℹ️'};
+  e.innerHTML=`<span>${icons[t]||'ℹ️'}</span>${m}`;
+  c.appendChild(e);setTimeout(()=>e.remove(),3200);
+}
+
+// Close modals on overlay click
+document.querySelectorAll('.overlay').forEach(o=>{
+  o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');});
+});
 </script>
 </body>
 </html>
