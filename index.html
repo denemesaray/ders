@@ -893,6 +893,7 @@ let examCfg = { count:5, time:0 };
 let qImgData = null;
 let correctOptIdx = 0;
 let selectedTF = null;
+let editingQuestionIndex = null; // Hangi sorunun düzenlendiğini tutar
 
 // ═══════════════════════════════════════════
 //  LOGIN
@@ -910,7 +911,6 @@ async function loginAdmin() {
   const pw = document.getElementById('admin-pw').value;
   if(!pw) { toast('Şifre gir!','err'); return; }
   
-  // Basit yükleniyor durumu
   const btn = document.querySelector('#admin-login-form button');
   const oldText = btn.innerText;
   btn.innerText = "Yükleniyor...";
@@ -918,7 +918,6 @@ async function loginAdmin() {
 
   const stored = await sGetPrivate(KEYS.adminPw);
   if(!stored) {
-    // First time: set password
     await sSetPrivate(KEYS.adminPw, pw);
     currentAdminPw = pw;
     toast('Admin şifresi oluşturuldu ✅','ok');
@@ -1141,7 +1140,10 @@ function renderLDQuestions() {
         <div class="q-text-preview">${q.text||'<em style="color:var(--text3)">Görsel soru</em>'}</div>
         ${optsHtml}
       </div>
-      <button class="btn btn-outline btn-icon btn-sm" onclick="deleteQ(${i})" style="flex-shrink:0;color:#e82a2a">✕</button>
+      <div style="display:flex; flex-direction:column; gap:6px; flex-shrink:0;">
+        <button class="btn btn-outline btn-icon btn-sm" onclick="editQ(${i})" style="color:var(--accent2)">✏️</button>
+        <button class="btn btn-outline btn-icon btn-sm" onclick="deleteQ(${i})" style="color:#e82a2a">✕</button>
+      </div>
     </div>`;
   }).join('');
 }
@@ -1154,9 +1156,12 @@ async function deleteQ(i) {
 }
 
 // ═══════════════════════════════════════════
-//  ADD QUESTION
+//  ADD / EDIT QUESTION
 // ═══════════════════════════════════════════
 function openAddQuestion() {
+  editingQuestionIndex = null; // Yeni soru eklendiğini belirtir
+  document.querySelector('#mo-question .modal-title').textContent = '❓ Soru Ekle';
+  
   qImgData=null; correctOptIdx=0; selectedTF=null;
   document.getElementById('qt-text').value='';
   document.getElementById('qt-select').value='mc';
@@ -1168,6 +1173,56 @@ function openAddQuestion() {
   document.getElementById('tf-t').classList.remove('on');
   document.getElementById('tf-f').classList.remove('on');
   resetOpts();
+  updateQUI();
+  openModal('mo-question');
+}
+
+function editQ(index) {
+  editingQuestionIndex = index;
+  const q = questions[activeLessonId][index];
+  
+  document.querySelector('#mo-question .modal-title').textContent = '✏️ Soruyu Düzenle';
+  document.getElementById('qt-select').value = q.type;
+  document.getElementById('qt-text').value = q.text || '';
+  
+  // Görsel yükleme
+  qImgData = q.img || null;
+  if (qImgData) {
+    document.getElementById('img-preview').src = qImgData;
+    document.getElementById('img-preview').classList.remove('hidden');
+    document.getElementById('img-zone').querySelector('.uz-icon').style.display = 'none';
+    document.getElementById('img-zone').querySelector('.uz-text').style.display = 'none';
+  } else {
+    document.getElementById('img-preview').src = '';
+    document.getElementById('img-preview').classList.add('hidden');
+    document.getElementById('img-zone').querySelector('.uz-icon').style.display = '';
+    document.getElementById('img-zone').querySelector('.uz-text').style.display = '';
+  }
+
+  // Soru tipine göre UI ayarları
+  if (q.type === 'mc') {
+    const wrap = document.getElementById('opts-wrap');
+    wrap.innerHTML = '';
+    (q.options || []).forEach(opt => addOpt(opt));
+    setCorrect(q.correct, null);
+  } else {
+    resetOpts();
+  }
+
+  if (q.type === 'tf') {
+    pickTF(q.correct);
+  } else {
+    selectedTF = null;
+    document.getElementById('tf-t').classList.remove('on');
+    document.getElementById('tf-f').classList.remove('on');
+  }
+
+  if (q.type === 'open') {
+    document.getElementById('open-answer').value = q.answer || '';
+  } else {
+    document.getElementById('open-answer').value = '';
+  }
+
   updateQUI();
   openModal('mo-question');
 }
@@ -1233,6 +1288,7 @@ async function saveQuestion() {
   const text=document.getElementById('qt-text').value.trim();
   if(!text&&!qImgData){toast('Soru metni veya görsel gerekli!','err');return;}
   let q={type,text,img:qImgData||null};
+  
   if(type==='mc'){
     const rows=[...document.querySelectorAll('#opts-wrap .opt-row')];
     const opts=rows.map(r=>r.querySelector('input').value.trim()).filter(Boolean);
@@ -1244,11 +1300,20 @@ async function saveQuestion() {
   } else {
     q.answer=document.getElementById('open-answer').value.trim();
   }
-  questions[activeLessonId].push(q);
+  
+  // EĞER DÜZENLEME MODUNDAYSAK GÜNCELLE, DEĞİLSE YENİ EKLE
+  if (editingQuestionIndex !== null) {
+    questions[activeLessonId][editingQuestionIndex] = q;
+    toast('Soru başarıyla güncellendi ✏️','ok');
+  } else {
+    questions[activeLessonId].push(q);
+    toast('Soru kaydedildi ✅','ok');
+  }
+  
   await saveData();
   closeModal('mo-question');
   renderLDQuestions();
-  toast('Soru kaydedildi ✅','ok');
+  editingQuestionIndex = null; // İşlem bitince sıfırla
 }
 
 // ═══════════════════════════════════════════
