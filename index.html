@@ -1451,12 +1451,14 @@ async function startExam(){
   const shuffle=document.getElementById('cfg-shuffle').checked;
   if(shuffle) allQs=allQs.sort(()=>Math.random()-0.5);
   const qs=allQs.slice(0,cnt);
+  
   examState={
     lessonId:activeLessonId, lessonName:lesson.name,
-    questions:qs, answers:{}, current:0,
+    questions:qs, answers:{}, aiChats:{}, current:0,
     elapsed:0, timeLimit:examCfg.time*60,
     timer:null, startTime:Date.now()
   };
+  
   closeModal('mo-exam-cfg');
   showPage('pg-exam');
   renderExamQ();
@@ -1467,7 +1469,7 @@ async function startExam(){
 //  EXAM
 // ═══════════════════════════════════════════
 function renderExamQ(){
-  const {questions:qs,current:idx,answers}=examState;
+  const {questions:qs, current:idx, answers, aiChats}=examState;
   const q=qs[idx];
   document.getElementById('ex-lesson-name').textContent=examState.lessonName;
   document.getElementById('ex-sub').textContent=`Soru ${idx+1} / ${qs.length}`;
@@ -1497,13 +1499,98 @@ function renderExamQ(){
       ${q.answer?`<div style="margin-top:8px;padding:10px;background:rgba(39,168,110,0.06);border:1px solid rgba(39,168,110,0.2);border-radius:8px;font-size:13px;color:var(--accent3)">💡 Beklenen: ${q.answer}</div>`:''}`;
   }
 
+  // YAPAY ZEKA KUTUCUĞU
+  const currentChat = aiChats[idx] || { input: '', response: '' };
+  const aiBoxHtml = `
+    <div style="margin-top:24px; background:var(--cream); border:1px solid var(--border); border-radius:var(--rs); padding:16px;">
+      <div style="font-size:13px; font-weight:700; margin-bottom:8px; color:var(--text);">🤖 Yapay Zeka Hoca'dan İpucu İste</div>
+      <div class="flex gap-2">
+        <input type="text" id="ai-input" class="form-input" style="padding:10px; font-size:14px; background:white;" placeholder="Örn: Bu sorunun mantığı nedir?" value="${currentChat.input}" onkeydown="if(event.key==='Enter')askAI()">
+        <button class="btn btn-blue btn-sm" onclick="askAI()" id="ai-btn" style="flex-shrink:0;">Sor →</button>
+      </div>
+      <div id="ai-response" style="margin-top:12px; font-size:14px; color:var(--text); line-height:1.6; display:${currentChat.response ? 'block' : 'none'}; background:white; padding:12px; border-radius:6px; border:1.5px dashed var(--accent2);">
+        ${currentChat.response}
+      </div>
+    </div>
+  `;
+
   document.getElementById('ex-q-wrap').innerHTML=`
     <div class="exam-q-card">
       <div class="eq-num">SORU ${idx+1}</div>
       ${imgHtml}
       <div class="eq-text">${q.text||''}</div>
       ${optsHtml}
+      ${aiBoxHtml}
     </div>`;
+}
+
+// ═══════════════════════════════════════════
+//  YAPAY ZEKA (GEMINI API) ENTEGRASYONU
+// ═══════════════════════════════════════════
+async function askAI() {
+  const API_KEY = "AIzaSyCQoylCGjgT0hQRfeQQZANGUd2LV_ciM0k"; // <-- BURAYA KENDİ KEY'İNİ YAPIŞTIR
+  
+  const idx = examState.current;
+  const q = examState.questions[idx];
+
+  const inputEl = document.getElementById('ai-input');
+  const responseEl = document.getElementById('ai-response');
+  const btnEl = document.getElementById('ai-btn');
+  const userMessage = inputEl.value.trim();
+
+  if(!userMessage) { toast('Lütfen önce yapay zekaya bir soru yazın!', 'err'); return; }
+
+  // Yazılan soruyu kaydet
+  if (!examState.aiChats[idx]) examState.aiChats[idx] = {};
+  examState.aiChats[idx].input = userMessage;
+
+  // Soru bağlamını hazırla (sınav anı olduğu için doğru cevabı yapay zekaya da vermiyoruz ki kazara ağzından kaçırmasın)
+  let context = `Soru Metni: "${q.text}"\n`;
+  if(q.type === 'mc') {
+    context += `Seçenekler:\n${(q.options||[]).map((o, i) => String.fromCharCode(65+i) + ") " + o).join('\n')}\n`;
+  } else if (q.type === 'tf') {
+    context += `Seçenekler: Doğru / Yanlış\n`;
+  }
+
+  const prompt = `Şu an bir öğrenciye yardımcı olan tatlı dilli ve zeki bir öğretmensin. Öğrenci şu an bir SINAVDA ve aşağıdaki soruyu çözmeye çalışıyor:
+  
+${context}
+
+Öğrencinin bu soruyla ilgili sana sorusu şu: "${userMessage}"
+
+DİKKAT: Öğrenci şu an sınavda olduğu için ona KESİNLİKLE DOĞRUDAN CEVABI SÖYLEME. Amacın sadece soruyu daha iyi anlaması için mantığını kavramasına yardımcı olacak küçük bir ipucu vermek ve onu yönlendirmek. Kısa, samimi ve net bir cevap ver. (HTML kullanma, sadece metin formatında yaz)`;
+
+  btnEl.disabled = true;
+  btnEl.textContent = "⏳";
+  responseEl.style.display = "block";
+  responseEl.innerHTML = `<em style="color:var(--text3)">🤖 Öğretmen düşünüyor...</em>`;
+
+  try {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+    });
+
+    if(!response.ok) throw new Error("API Hatası");
+
+    const data = await response.json();
+    const aiText = data.candidates[0].content.parts[0].text;
+    
+    const formattedResponse = `<b style="color:var(--accent2)">🤖 İpucu:</b><br><br>${aiText.replace(/\n/g, '<br>')}`;
+    responseEl.innerHTML = formattedResponse;
+
+    // Cevabı kaydet ki öğrenci diğer soruya geçip geri dönünce silinmesin
+    examState.aiChats[idx].response = formattedResponse;
+
+  } catch (err) {
+    console.error(err);
+    responseEl.innerHTML = `<span style="color:#e82a2a;">Bağlantı hatası oluştu. Lütfen API anahtarını kontrol et.</span>`;
+    examState.aiChats[idx].response = responseEl.innerHTML;
+  } finally {
+    btnEl.disabled = false;
+    btnEl.textContent = "Sor →";
+  }
 }
 
 function pickAns(val){
