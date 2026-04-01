@@ -441,6 +441,23 @@ body{
 .empty .et{font-size:16px;color:var(--text);margin-bottom:8px;font-weight:600;}
 .empty .es{font-size:13px;}
 
+/* ── HISTORY ── */
+.hist-row{
+  display:flex;align-items:center;gap:16px;padding:16px 20px;
+  border-radius:var(--rs);border:1px solid var(--border);
+  margin-bottom:10px;background:var(--surface);transition:border-color 0.2s;
+}
+.hist-row:hover{border-color:var(--border2);}
+.hist-score-box{
+  width:56px;height:56px;border-radius:12px;
+  background:var(--surface2);display:flex;align-items:center;justify-content:center;
+  font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:700;flex-shrink:0;
+  border:1px solid var(--border);
+}
+.hist-info{flex:1;min-width:0;}
+.hist-name{font-size:15px;font-weight:700;margin-bottom:4px;}
+.hist-meta{font-size:13px;color:var(--text3);}
+
 /* ── UTILS ── */
 .hidden{display:none!important;}
 .flex{display:flex;}.items-center{align-items:center;}.justify-between{justify-content:space-between;}
@@ -692,6 +709,37 @@ body{
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('mo-chapter')">İptal</button>
       <button class="btn btn-primary" onclick="saveChapter()">Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="mo-ann">
+  <div class="modal modal-md">
+    <div class="modal-title" id="mo-ann-title">📢 Yeni Duyuru Ekle</div>
+    <div class="form-group">
+      <label class="form-label">Duyuru Türü</label>
+      <select class="form-select" id="ann-type">
+        <option value="info">ℹ️ Bilgilendirme</option>
+        <option value="success">✅ Başarı / Kutlama</option>
+        <option value="warn">⚠️ Uyarı</option>
+        <option value="urgent">🔴 Acil</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Başlık *</label>
+      <input type="text" class="form-input" id="ann-title-input" placeholder="Örn: Yarınki sınav hakkında">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Mesaj İçeriği</label>
+      <textarea class="form-textarea" id="ann-text-input" placeholder="Duyuru detaylarını buraya yazın..."></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Emoji / İkon</label>
+      <input type="text" class="form-input" id="ann-icon-input" value="📢" placeholder="📢">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('mo-ann')">İptal</button>
+      <button class="btn btn-primary" onclick="saveAnn()">Yayınla</button>
     </div>
   </div>
 </div>
@@ -1457,6 +1505,131 @@ async function saveQuestion(){
   }
   
   await saveData();closeModal('mo-question');renderLDQuestions();
+}
+
+// ═══ DUYURULAR (ANNOUNCEMENTS) ═══
+function openAddAnn(){
+  editingAnnId=null;
+  document.getElementById('mo-ann-title').textContent='📢 Yeni Duyuru Ekle';
+  document.getElementById('ann-type').value='info';
+  document.getElementById('ann-title-input').value='';
+  document.getElementById('ann-text-input').value='';
+  document.getElementById('ann-icon-input').value='📢';
+  openModal('mo-ann');
+}
+
+function openEditAnn(id){
+  const a=announcements.find(x=>x.id===id);if(!a)return;
+  editingAnnId=id;
+  document.getElementById('mo-ann-title').textContent='✏️ Duyuruyu Düzenle';
+  document.getElementById('ann-type').value=a.type||'info';
+  document.getElementById('ann-title-input').value=a.title;
+  document.getElementById('ann-text-input').value=a.text||'';
+  document.getElementById('ann-icon-input').value=a.icon||'📢';
+  openModal('mo-ann');
+}
+
+async function saveAnn(){
+  const title=document.getElementById('ann-title-input').value.trim();
+  if(!title)return toast('Lütfen bir başlık girin!','err');
+  const ann={
+    type:document.getElementById('ann-type').value,
+    title,
+    text:document.getElementById('ann-text-input').value.trim(),
+    icon:document.getElementById('ann-icon-input').value||'📢',
+    date:Date.now()
+  };
+  
+  if(editingAnnId){
+    const idx=announcements.findIndex(x=>x.id===editingAnnId);
+    if(idx!==-1){ann.id=editingAnnId;announcements[idx]=ann;}
+    toast('Duyuru başarıyla güncellendi','ok');
+  } else {
+    ann.id='a_'+Date.now();
+    announcements.unshift(ann);
+    toast('Duyuru başarıyla yayınlandı','ok');
+  }
+  await saveAnnouncements();closeModal('mo-ann');renderAnnAdmin();
+}
+
+async function deleteAnn(id){
+  if(!confirm('Bu duyuruyu silmek istediğinize emin misiniz?'))return;
+  announcements=announcements.filter(a=>a.id!==id);
+  await saveAnnouncements();renderAnnAdmin();toast('Duyuru silindi','ok');
+}
+
+function renderAnnAdmin(){
+  const list=document.getElementById('ann-list-admin');
+  if(!announcements.length){
+    list.innerHTML='<div class="empty"><div class="ei">📭</div><div class="et">Henüz duyuru oluşturulmamış</div><div class="es">Öğrencilerinize duyuru yapmak için üstteki butonu kullanın.</div></div>';
+    return;
+  }
+  const typeLabels={info:'Bilgi',warn:'Uyarı',success:'Başarı',urgent:'Acil'};
+  list.innerHTML=announcements.map(a=>`
+    <div class="ann-card type-${a.type||'info'}">
+      <div class="ann-icon">${a.icon||'📢'}</div>
+      <div class="ann-body">
+        <div class="flex items-center gap-2 mb-2">
+          <div class="ann-title" style="margin-bottom:0">${a.title}</div>
+          <span class="ann-type-badge" style="font-size:10px;padding:3px 8px;border-radius:4px;background:var(--surface2);border:1px solid var(--border)">${typeLabels[a.type]||a.type}</span>
+        </div>
+        ${a.text?`<div class="ann-text">${a.text}</div>`:''}
+        <div class="ann-meta">${new Date(a.date).toLocaleString('tr-TR')}</div>
+      </div>
+      <div class="ann-actions">
+        <button class="btn btn-outline btn-sm" onclick="openEditAnn('${a.id}')">Düzenle</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteAnn('${a.id}')">Sil</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ═══ AYARLAR VE GEÇMİŞ (SETTINGS & HISTORY) ═══
+async function loadSettings(){
+  const pw=await sGet(KEYS.studentPw);
+  document.getElementById('current-pw-label').textContent=pw?`Mevcut Şifre: ${pw}`:'Henüz öğrenci şifresi belirlenmemiş.';
+}
+
+async function saveStudentPw(){
+  const v=document.getElementById('student-pw-setting').value;
+  if(!v)return toast('Sınıf şifresi boş bırakılamaz!','err');
+  await sSet(KEYS.studentPw,v);
+  toast('Öğrenci sınıf şifresi güncellendi','ok');
+  loadSettings();
+}
+
+async function changeAdminPw(){
+  const v=document.getElementById('new-admin-pw').value;
+  if(!v)return toast('Yeni şifre alanı boş olamaz!','err');
+  await sSetPrivate(KEYS.adminPw,v);
+  toast('Admin şifresi başarıyla değiştirildi','ok');
+  document.getElementById('new-admin-pw').value = '';
+}
+
+function renderHistory(){
+  const el=document.getElementById('history-list');
+  if(!history.length){
+      el.innerHTML='<div class="empty"><div class="ei">📊</div><div class="et">Sınav geçmişi boş</div><div class="es">Öğrencileriniz sınav çözdükçe sonuçlar burada görünecektir.</div></div>';
+      return;
+  }
+  el.innerHTML=history.map(h=>{
+    const s=h.score;const color=s>=80?'var(--accent3)':s>=50?'var(--gold)':'#dc3545';
+    return `<div class="hist-row">
+      <div class="hist-score-box" style="color:${color}">${s}%</div>
+      <div class="hist-info">
+        <div class="hist-name">${h.studentName||'İsimsiz Öğrenci'}</div>
+        <div class="hist-meta">${h.lessonName} · ${h.date?new Date(h.date).toLocaleString('tr-TR'):''}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function clearHistory(){
+    if(!confirm('DİKKAT: Tüm sınav kayıtları kalıcı olarak silinecek. Onaylıyor musunuz?'))return;
+    history=[];
+    await saveHistory();
+    renderHistory();
+    toast('Tüm sınav geçmişi temizlendi','ok');
 }
 
 // ═══ ÖĞRENCİ ARAYÜZÜ ═══
