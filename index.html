@@ -7,6 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-storage-compat.js"></script>
 
 <style>
 :root {
@@ -1049,7 +1050,8 @@ let lessons=[],questions={},history=[],announcements=[],lessonPdfs={};
 let activeLessonId=null, activeChapterId=null, examState={},examCfg={count:5,time:0};
 let qImgData=[],correctOptIdx=0,selectedTF=null,editingQuestionIndex=null;
 let editingLessonId=null,editingAnnId=null;
-let pendingPdfData=null,pendingPdfName=null;
+// PDF için Dosya Objesi tutuyoruz
+let pendingPdfFile=null;
 
 // ═══ LOGIN ═══
 function switchRole(r){
@@ -1098,7 +1100,6 @@ async function loadData(){
   announcements=(await sGet(KEYS.announcements))||[];
   lessonPdfs=(await sGet(KEYS.pdfs))||{};
   
-  // Backward compatibility: ensure all lessons have at least 'default' chapter
   lessons.forEach(l => {
       if(!l.chapters || !l.chapters.length) {
           l.chapters = [{id: 'default', name: 'Genel'}];
@@ -1120,7 +1121,7 @@ function openAddPdf(){
   openModal('mo-pdf');
 }
 function resetPdfModal(){
-  pendingPdfData=null;pendingPdfName=null;
+  pendingPdfFile=null;
   document.getElementById('pdf-name-input').value='';
   document.getElementById('pdf-zone-text').textContent='Tıkla veya PDF sürükle bırak';
   document.getElementById('pdf-zone').style.borderColor='';
@@ -1129,37 +1130,63 @@ function resetPdfModal(){
 function handlePdfFile(file){
   if(!file)return;
   if(file.type!=='application/pdf')return toast('Sadece PDF kabul edilir!','err');
-  // Removed size limit as requested
-  const r=new FileReader();
-  r.onload=e=>{
-    pendingPdfData=e.target.result;
-    pendingPdfName=file.name;
-    document.getElementById('pdf-zone-text').textContent='✅ '+file.name+' ('+Math.round(file.size/1024)+' KB)';
-    document.getElementById('pdf-zone').style.borderColor='var(--accent3)';
-    if(!document.getElementById('pdf-name-input').value)
-      document.getElementById('pdf-name-input').value=file.name.replace('.pdf','');
-  };
-  r.readAsDataURL(file);
+  
+  // Dosyayı Firebase Storage'a yüklemek için RAM'de tut
+  pendingPdfFile = file; 
+  
+  document.getElementById('pdf-zone-text').textContent='✅ '+file.name+' ('+Math.round(file.size/1024)+' KB)';
+  document.getElementById('pdf-zone').style.borderColor='var(--accent3)';
+  if(!document.getElementById('pdf-name-input').value)
+    document.getElementById('pdf-name-input').value=file.name.replace('.pdf','');
 }
 function handlePdfDrop(e){
   e.preventDefault();
   document.getElementById('pdf-zone').classList.remove('drag');
   if(e.dataTransfer.files[0])handlePdfFile(e.dataTransfer.files[0]);
 }
+
 async function savePdf(){
   const name=document.getElementById('pdf-name-input').value.trim();
   if(!name)return toast('PDF adı gir!','err');
-  if(!pendingPdfData)return toast('PDF dosyası seç!','err');
+  if(!pendingPdfFile)return toast('PDF dosyası seç!','err');
+
   if(!lessonPdfs[activeLessonId])lessonPdfs[activeLessonId]=[];
-  const pdf={id:'p_'+Date.now(),name,data:pendingPdfData,size:Math.round(pendingPdfData.length*0.75/1024)+' KB',date:Date.now(), chapterId: activeChapterId};
-  lessonPdfs[activeLessonId].push(pdf);
-  toast('PDF kaydediliyor… (Boyuta göre uzayabilir)','info');
-  const ok=await savePdfs();
-  if(ok===false)return toast('Kayıt başarısız!','err');
-  toast('PDF eklendi','ok');
-  closeModal('mo-pdf');resetPdfModal();
-  renderLDPdfs();
+
+  toast('PDF Storage\'a yükleniyor, bekle... (Boyuta göre sürebilir)','info');
+
+  try {
+    // Firebase Storage'a dosyayı yükle
+    const fileRef = firebase.storage().ref('siniflab_pdfs/' + Date.now() + '_' + pendingPdfFile.name);
+    await fileRef.put(pendingPdfFile);
+    // Yüklenen dosyanın internet adresini (URL) al
+    const downloadURL = await fileRef.getDownloadURL();
+
+    // Sadece URL'yi ve bilgileri veritabanına kaydet
+    const pdf = { 
+      id: 'p_'+Date.now(), 
+      name: name, 
+      url: downloadURL, // Veri yerine link kaydediyoruz
+      size: Math.round(pendingPdfFile.size/1024)+' KB', 
+      date: Date.now(), 
+      chapterId: activeChapterId 
+    };
+    
+    lessonPdfs[activeLessonId].push(pdf);
+    const ok = await savePdfs();
+    
+    if(ok===false) return toast('Veritabanına kayıt başarısız!','err');
+    
+    toast('PDF eklendi','ok');
+    closeModal('mo-pdf');
+    resetPdfModal();
+    renderLDPdfs();
+
+  } catch (error) {
+    console.error(error);
+    toast('Yükleme Hatası! Firebase Storage kurallarını açık yaptığından emin ol.','err');
+  }
 }
+
 async function deletePdf(id){
   if(!confirm('Bu PDF silinsin mi?'))return;
   lessonPdfs[activeLessonId]=(lessonPdfs[activeLessonId]||[]).filter(p=>p.id!==id);
@@ -1193,9 +1220,14 @@ function openPdfViewer(id){
   }
   if(!pdf)return toast('PDF bulunamadı','err');
   document.getElementById('pdf-viewer-title').textContent='📄 '+pdf.name;
-  document.getElementById('pdf-viewer-frame').src=pdf.data;
+  
+  // Geriye dönük uyumluluk (Eski PDF'ler data, yeniler url kullanır)
+  const pdfSrc = pdf.url || pdf.data;
+  
+  document.getElementById('pdf-viewer-frame').src = pdfSrc;
   const dl=document.getElementById('pdf-download-btn');
-  dl.href=pdf.data;dl.download=pdf.name+'.pdf';
+  dl.href=pdfSrc;
+  dl.download=pdf.name+'.pdf';
   document.getElementById('pdf-viewer').classList.add('open');
 }
 function closePdfViewer(){
