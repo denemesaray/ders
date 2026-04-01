@@ -326,6 +326,41 @@ body{
   margin-top:22px;padding-top:18px;border-top:1px solid var(--border);
 }
 
+/* ── PDF ── */
+.pdf-item{
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:var(--rs);padding:12px 14px;
+  display:flex;align-items:center;gap:12px;
+  transition:all 0.2s;animation:slideIn 0.3s ease;
+  margin-bottom:8px;
+}
+.pdf-item:hover{border-color:var(--border2);}
+.pdf-icon{font-size:24px;flex-shrink:0;}
+.pdf-info{flex:1;min-width:0;}
+.pdf-name{font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pdf-size{font-size:11px;color:var(--text3);margin-top:2px;}
+.pdf-actions{display:flex;gap:5px;flex-shrink:0;}
+.pdf-viewer-wrap{
+  position:fixed;inset:0;background:rgba(5,5,10,0.9);
+  backdrop-filter:blur(12px);z-index:600;
+  display:flex;flex-direction:column;
+  opacity:0;pointer-events:none;transition:opacity 0.25s;
+}
+.pdf-viewer-wrap.open{opacity:1;pointer-events:all;}
+.pdf-viewer-bar{
+  background:var(--surface);border-bottom:1px solid var(--border);
+  padding:12px 20px;display:flex;align-items:center;justify-content:space-between;
+  flex-shrink:0;
+}
+.pdf-viewer-title{font-size:14px;font-weight:700;color:var(--text);}
+.pdf-viewer-frame{flex:1;border:none;background:white;}
+.pdf-nav{
+  background:var(--surface);border-top:1px solid var(--border);
+  padding:10px 20px;display:flex;align-items:center;justify-content:center;gap:12px;
+  flex-shrink:0;
+}
+.pdf-page-info{font-size:13px;color:var(--text2);font-family:'JetBrains Mono',monospace;}
+
 /* ── UPLOAD ── */
 .upload-zone{
   border:2px dashed var(--border2);border-radius:var(--r);
@@ -676,8 +711,14 @@ body{
           <button class="btn btn-ghost btn-sm" onclick="adminTab('lessons')">← Geri</button>
           <button class="btn btn-outline btn-sm" onclick="openEditLesson()">✏️ Dersi Düzenle</button>
           <button class="btn btn-outline btn-sm" onclick="openBulkAdd()">📋 Toplu Ekle</button>
+          <button class="btn btn-gold btn-sm" onclick="openAddPdf()">📄 PDF Ekle</button>
           <button class="btn btn-primary btn-sm" onclick="openAddQuestion()">+ Soru Ekle</button>
         </div>
+      </div>
+      <!-- PDF Materyaller -->
+      <div id="ld-pdfs-section" class="hidden" style="margin-bottom:20px">
+        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--text3);margin-bottom:10px;">📄 Ders Materyalleri (PDF)</div>
+        <div id="ld-pdfs"></div>
       </div>
       <div id="ld-questions"></div>
     </div>
@@ -928,6 +969,57 @@ body{
   </div>
 </div>
 
+<!-- ÖĞRENCİ PDF MODAL -->
+<div class="overlay" id="mo-student-pdfs">
+  <div class="modal modal-md">
+    <div class="modal-title" id="mo-student-pdfs-title">📄 Materyaller</div>
+    <div id="mo-student-pdfs-list"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('mo-student-pdfs')">Kapat</button>
+    </div>
+  </div>
+</div>
+
+<!-- PDF EKLE MODAL -->
+<div class="overlay" id="mo-pdf">
+  <div class="modal modal-md">
+    <div class="modal-title">📄 PDF Materyal Ekle</div>
+    <div class="form-group">
+      <label class="form-label">PDF Adı *</label>
+      <input type="text" class="form-input" id="pdf-name-input" placeholder="Örn: 3. Ünite Özeti">
+    </div>
+    <div class="form-group">
+      <label class="form-label">PDF Dosyası *</label>
+      <div class="upload-zone" id="pdf-zone"
+        ondragover="event.preventDefault();this.classList.add('drag')"
+        ondragleave="this.classList.remove('drag')"
+        ondrop="handlePdfDrop(event)"
+        onclick="document.getElementById('pdf-file').click()">
+        <div class="uz-icon">📄</div>
+        <div class="uz-text" id="pdf-zone-text">Tıkla veya PDF sürükle bırak</div>
+        <div class="uz-sub">Yalnızca PDF — maks 5MB</div>
+      </div>
+      <input type="file" id="pdf-file" accept="application/pdf" class="hidden" onchange="handlePdfFile(this.files[0])">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('mo-pdf');resetPdfModal()">İptal</button>
+      <button class="btn btn-gold btn-sm" onclick="savePdf()">📄 Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<!-- PDF VIEWER -->
+<div class="pdf-viewer-wrap" id="pdf-viewer">
+  <div class="pdf-viewer-bar">
+    <div class="pdf-viewer-title" id="pdf-viewer-title">PDF</div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <a id="pdf-download-btn" download class="btn btn-outline btn-sm">⬇️ İndir</a>
+      <button class="btn btn-ghost btn-sm" onclick="closePdfViewer()">✕ Kapat</button>
+    </div>
+  </div>
+  <iframe id="pdf-viewer-frame" class="pdf-viewer-frame" src=""></iframe>
+</div>
+
 <!-- LIGHTBOX -->
 <div class="lightbox" id="lightbox" onclick="closeLightbox()">
   <button class="lightbox-close" onclick="closeLightbox()">✕</button>
@@ -955,7 +1047,8 @@ const db = firebase.firestore();
 const KEYS = {
   adminPw:'sl2_admin_pw', studentPw:'sl2_student_pw',
   lessons:'sl2_lessons', questions:'sl2_questions',
-  history:'sl2_history', announcements:'sl2_announcements'
+  history:'sl2_history', announcements:'sl2_announcements',
+  pdfs:'sl2_pdfs'
 };
 
 async function sGet(key,shared=true){
@@ -969,10 +1062,11 @@ async function sSetPrivate(k,v){return sSet(k,v,false);}
 
 // ═══ STATE ═══
 let role=null,currentUser=null;
-let lessons=[],questions={},history=[],announcements=[];
+let lessons=[],questions={},history=[],announcements=[],lessonPdfs={};
 let activeLessonId=null,examState={},examCfg={count:5,time:0};
 let qImgData=[],correctOptIdx=0,selectedTF=null,editingQuestionIndex=null;
 let editingLessonId=null,editingAnnId=null;
+let pendingPdfData=null,pendingPdfName=null;
 
 // ═══ LOGIN ═══
 function switchRole(r){
@@ -1019,14 +1113,105 @@ async function loadData(){
   questions=(await sGet(KEYS.questions))||{};
   history=(await sGet(KEYS.history))||[];
   announcements=(await sGet(KEYS.announcements))||[];
+  lessonPdfs=(await sGet(KEYS.pdfs))||{};
 }
 async function saveData(){await sSet(KEYS.lessons,lessons);await sSet(KEYS.questions,questions);}
 async function saveHistory(){await sSet(KEYS.history,history);}
 async function saveAnnouncements(){await sSet(KEYS.announcements,announcements);}
+async function savePdfs(){await sSet(KEYS.pdfs,lessonPdfs);}
 
 // ═══ PAGES ═══
 const allPages=['pg-lessons','pg-lesson-detail','pg-settings','pg-history','pg-student-home','pg-exam','pg-result','pg-review','pg-announcements'];
 function showPage(id){allPages.forEach(p=>document.getElementById(p)?.classList.add('hidden'));document.getElementById(id)?.classList.remove('hidden');}
+
+// ═══ PDF ═══
+function openAddPdf(){
+  resetPdfModal();
+  openModal('mo-pdf');
+}
+function resetPdfModal(){
+  pendingPdfData=null;pendingPdfName=null;
+  document.getElementById('pdf-name-input').value='';
+  document.getElementById('pdf-zone-text').textContent='Tıkla veya PDF sürükle bırak';
+  document.getElementById('pdf-zone').style.borderColor='';
+  document.getElementById('pdf-file').value='';
+}
+function handlePdfFile(file){
+  if(!file)return;
+  if(file.type!=='application/pdf')return toast('Sadece PDF kabul edilir!','err');
+  if(file.size>5*1024*1024)return toast('PDF boyutu maksimum 5MB olabilir!','err');
+  const r=new FileReader();
+  r.onload=e=>{
+    pendingPdfData=e.target.result;
+    pendingPdfName=file.name;
+    document.getElementById('pdf-zone-text').textContent='✅ '+file.name+' ('+Math.round(file.size/1024)+' KB)';
+    document.getElementById('pdf-zone').style.borderColor='var(--accent3)';
+    if(!document.getElementById('pdf-name-input').value)
+      document.getElementById('pdf-name-input').value=file.name.replace('.pdf','');
+  };
+  r.readAsDataURL(file);
+}
+function handlePdfDrop(e){
+  e.preventDefault();
+  document.getElementById('pdf-zone').classList.remove('drag');
+  if(e.dataTransfer.files[0])handlePdfFile(e.dataTransfer.files[0]);
+}
+async function savePdf(){
+  const name=document.getElementById('pdf-name-input').value.trim();
+  if(!name)return toast('PDF adı gir!','err');
+  if(!pendingPdfData)return toast('PDF dosyası seç!','err');
+  if(!lessonPdfs[activeLessonId])lessonPdfs[activeLessonId]=[];
+  const pdf={id:'p_'+Date.now(),name,data:pendingPdfData,size:Math.round(pendingPdfData.length*0.75/1024)+' KB',date:Date.now()};
+  lessonPdfs[activeLessonId].push(pdf);
+  toast('PDF kaydediliyor…','info');
+  const ok=await savePdfs();
+  if(ok===false)return toast('Kayıt başarısız!','err');
+  toast('PDF eklendi','ok');
+  closeModal('mo-pdf');resetPdfModal();
+  renderLDPdfs();
+}
+async function deletePdf(id){
+  if(!confirm('Bu PDF silinsin mi?'))return;
+  lessonPdfs[activeLessonId]=(lessonPdfs[activeLessonId]||[]).filter(p=>p.id!==id);
+  await savePdfs();renderLDPdfs();toast('PDF silindi','ok');
+}
+function renderLDPdfs(){
+  const pdfs=lessonPdfs[activeLessonId]||[];
+  const section=document.getElementById('ld-pdfs-section');
+  const list=document.getElementById('ld-pdfs');
+  if(!pdfs.length){section.classList.add('hidden');return;}
+  section.classList.remove('hidden');
+  list.innerHTML=pdfs.map(p=>`
+    <div class="pdf-item">
+      <div class="pdf-icon">📄</div>
+      <div class="pdf-info">
+        <div class="pdf-name">${p.name}</div>
+        <div class="pdf-size">${p.size} · ${new Date(p.date).toLocaleDateString('tr-TR')}</div>
+      </div>
+      <div class="pdf-actions">
+        <button class="btn btn-gold btn-sm" onclick="openPdfViewer('${p.id}')">👁️ Görüntüle</button>
+        <button class="btn btn-danger btn-sm btn-icon" onclick="deletePdf('${p.id}')" title="Sil">🗑️</button>
+      </div>
+    </div>`).join('');
+}
+function openPdfViewer(id){
+  // Find PDF in current lesson or all lessons
+  let pdf=null;
+  for(const lid of Object.keys(lessonPdfs)){
+    pdf=(lessonPdfs[lid]||[]).find(p=>p.id===id);
+    if(pdf)break;
+  }
+  if(!pdf)return toast('PDF bulunamadı','err');
+  document.getElementById('pdf-viewer-title').textContent='📄 '+pdf.name;
+  document.getElementById('pdf-viewer-frame').src=pdf.data;
+  const dl=document.getElementById('pdf-download-btn');
+  dl.href=pdf.data;dl.download=pdf.name+'.pdf';
+  document.getElementById('pdf-viewer').classList.add('open');
+}
+function closePdfViewer(){
+  document.getElementById('pdf-viewer').classList.remove('open');
+  document.getElementById('pdf-viewer-frame').src='';
+}
 
 function adminTab(tab){
   ['lessons','settings','history','announcements'].forEach(t=>document.getElementById('at-'+t)?.classList.toggle('active',t===tab));
@@ -1127,7 +1312,7 @@ function openLessonDetail(id){
   const l=lessons.find(x=>x.id===id);
   document.getElementById('ld-title').textContent=l.emoji+' '+l.name;
   document.getElementById('ld-sub').textContent=`${(questions[id]||[]).length} soru`;
-  showPage('pg-lesson-detail');renderLDQuestions();
+  showPage('pg-lesson-detail');renderLDQuestions();renderLDPdfs();
 }
 
 function renderLDQuestions(){
@@ -1461,12 +1646,14 @@ function renderStudentHome(){
   grid.innerHTML=lessons.map(l=>{
     const color=l.color||'#ff5f3d';
     const qc=(questions[l.id]||[]).length;
+    const pdfCount=(lessonPdfs[l.id]||[]).length;
     return `<div class="sl-card" onclick="openExamCfg('${l.id}')">
       <div class="sl-stripe" style="background:${color}"></div>
       <div class="sl-body">
         <span class="sl-emoji">${l.emoji}</span>
         <div class="sl-name">${l.name}</div>
-        <div class="sl-meta">${qc} soru mevcut</div>
+        <div class="sl-meta">${qc} soru mevcut${pdfCount?` · ${pdfCount} PDF`:''}</div>
+        ${pdfCount?`<button class="btn btn-gold btn-sm" style="margin-bottom:6px;width:100%" onclick="event.stopPropagation();openStudentPdfs('${l.id}')">📄 Materyalleri Gör</button>`:''}
         <button class="btn btn-primary btn-sm sl-start">Sınava Gir →</button>
       </div>
     </div>`;
@@ -1564,6 +1751,24 @@ function showReview(){
 }
 
 // ═══ UTILS ═══
+function openStudentPdfs(lessonId){
+  const pdfs=lessonPdfs[lessonId]||[];
+  if(!pdfs.length)return toast('Bu derste PDF materyal yok','info');
+  const l=lessons.find(x=>x.id===lessonId);
+  document.getElementById('mo-student-pdfs-title').textContent=(l?l.emoji+' '+l.name:'Ders')+' — Materyaller';
+  document.getElementById('mo-student-pdfs-list').innerHTML=pdfs.map(p=>`
+    <div class="pdf-item">
+      <div class="pdf-icon">📄</div>
+      <div class="pdf-info">
+        <div class="pdf-name">${p.name}</div>
+        <div class="pdf-size">${p.size}</div>
+      </div>
+      <div class="pdf-actions">
+        <button class="btn btn-gold btn-sm" onclick="openPdfViewer('${p.id}')">👁️ Aç</button>
+      </div>
+    </div>`).join('');
+  openModal('mo-student-pdfs');
+}
 function openModal(id){document.getElementById(id).classList.add('open');}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 function toast(m,t='info'){
