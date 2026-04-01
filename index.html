@@ -276,27 +276,57 @@ body{
 /* ── QUESTIONS ── */
 .q-item{
   background:var(--surface);border:1px solid var(--border);
-  border-radius:var(--r);padding:20px;margin-bottom:12px;
-  display:flex;gap:16px;align-items:flex-start;
+  border-radius:var(--r);padding:24px;margin-bottom:16px;
+  display:flex;gap:20px;align-items:flex-start;
   transition:all 0.2s;animation:slideIn 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 }
 .q-item:hover{border-color:var(--border2);background:var(--surface2);}
 .q-num{
-  width:32px;height:32px;background:var(--accent);color:white;
-  border-radius:8px;display:flex;align-items:center;justify-content:center;
-  font-size:13px;font-weight:700;flex-shrink:0;font-family:'JetBrains Mono',monospace;
+  width:36px;height:36px;background:var(--accent);color:white;
+  border-radius:10px;display:flex;align-items:center;justify-content:center;
+  font-size:14px;font-weight:700;flex-shrink:0;font-family:'JetBrains Mono',monospace;
 }
 .q-body{flex:1;min-width:0;}
 .q-type-tag{
   display:inline-block;padding:4px 10px;border-radius:6px;
-  font-size:10px;font-weight:700;text-transform:uppercase;margin-bottom:8px;
+  font-size:10px;font-weight:700;text-transform:uppercase;margin-bottom:10px;
 }
 .tag-mc{background:rgba(255,95,61,0.12);color:var(--accent);}
 .tag-tf{background:rgba(74,144,255,0.12);color:var(--accent2);}
 .tag-open{background:rgba(46,204,138,0.12);color:var(--accent3);}
-.q-text-preview{font-size:14px;line-height:1.6;color:var(--text);}
-.q-img-thumb{width:60px;height:44px;object-fit:cover;border-radius:6px;margin-top:10px;border:1px solid var(--border);}
+.q-text-preview{font-size:15px;line-height:1.6;color:var(--text);}
 .q-actions{display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap;}
+
+/* ── LIGHTBOX (RESİM BÜYÜTME) ── */
+.lightbox{
+  position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:9000;
+  display:flex;align-items:center;justify-content:center;padding:20px;
+  cursor:zoom-out;opacity:0;pointer-events:none;transition:opacity 0.2s;
+}
+.lightbox.open{opacity:1;pointer-events:all;}
+.lightbox img{max-width:92vw;max-height:92vh;border-radius:var(--r);object-fit:contain;cursor:default;box-shadow: 0 20px 50px rgba(0,0,0,0.5);}
+.lightbox-close{
+  position:absolute;top:20px;right:20px;width:44px;height:44px;
+  background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);
+  border-radius:50%;color:white;font-size:20px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;z-index:9001;transition:background 0.2s;
+}
+.lightbox-close:hover{background:rgba(255,255,255,0.25);}
+.lightbox-nav{
+  position:absolute;top:50%;transform:translateY(-50%);
+  width:56px;height:56px;background:rgba(255,255,255,0.1);
+  border:1px solid rgba(255,255,255,0.2);border-radius:50%;
+  color:white;font-size:28px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:background 0.2s;z-index:9001;
+}
+.lightbox-nav:hover{background:rgba(255,255,255,0.25);}
+.lightbox-prev{left:24px;}.lightbox-next{right:24px;}
+.lightbox-counter{
+  position:absolute;bottom:24px;left:50%;transform:translateX(-50%);
+  background:rgba(0,0,0,0.7);color:white;padding:8px 20px;border-radius:24px;
+  font-size:14px;font-family:'JetBrains Mono',monospace;z-index:9001;border:1px solid rgba(255,255,255,0.1);
+}
 
 /* ── ANNOUNCEMENTS ── */
 .ann-card{
@@ -887,7 +917,13 @@ body{
   <iframe id="pdf-viewer-frame" class="pdf-viewer-frame" src="" style="background:#e5e5e5;"></iframe>
 </div>
 
-<div class="lightbox" id="lightbox" onclick="closeLightbox()" style="display:none;"></div>
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+  <button class="lightbox-nav lightbox-prev" onclick="event.stopPropagation();lbNav(-1)">‹</button>
+  <img id="lightbox-img" src="" alt="">
+  <button class="lightbox-nav lightbox-next" onclick="event.stopPropagation();lbNav(1)">›</button>
+  <div class="lightbox-counter" id="lightbox-counter"></div>
+</div>
 
 <div id="toasts" style="position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:10px;"></div>
 
@@ -1002,6 +1038,36 @@ async function savePdfs(){await sSet(KEYS.pdfs,lessonPdfs);}
 const allPages=['pg-lessons','pg-lesson-detail','pg-settings','pg-history','pg-student-home','pg-student-chapters','pg-exam','pg-result','pg-review','pg-announcements'];
 function showPage(id){allPages.forEach(p=>document.getElementById(p)?.classList.add('hidden'));document.getElementById(id)?.classList.remove('hidden');}
 
+// ═══ LIGHTBOX FONKSİYONLARI (RESİM BÜYÜTME) ═══
+let lbImages=[],lbIdx=0;
+function openLightbox(idx,src){
+  lbImages=src==='modal'?qImgData:src;
+  lbIdx=idx;
+  if(!lbImages || !lbImages.length) return;
+  document.getElementById('lightbox-img').src=lbImages[lbIdx];
+  document.getElementById('lightbox-counter').textContent=lbImages.length>1?`${lbIdx+1} / ${lbImages.length}`:'';
+  document.querySelector('.lightbox-prev').style.display=lbImages.length>1?'flex':'none';
+  document.querySelector('.lightbox-next').style.display=lbImages.length>1?'flex':'none';
+  document.getElementById('lightbox').classList.add('open');
+}
+function closeLightbox(){document.getElementById('lightbox').classList.remove('open');}
+function openQThumb(qIdx,imgIdx){
+  const q=questions[activeLessonId][qIdx];
+  const imgs=q.imgs||(q.img?[q.img]:[]);
+  openLightbox(imgIdx,imgs);
+}
+function lbNav(dir){
+  lbIdx=(lbIdx+dir+lbImages.length)%lbImages.length;
+  document.getElementById('lightbox-img').src=lbImages[lbIdx];
+  document.getElementById('lightbox-counter').textContent=`${lbIdx+1} / ${lbImages.length}`;
+}
+document.addEventListener('keydown',e=>{
+  if(document.getElementById('lightbox').classList.contains('open')){
+    if(e.key==='ArrowRight')lbNav(1);
+    else if(e.key==='ArrowLeft')lbNav(-1);
+    else if(e.key==='Escape')closeLightbox();
+  }
+});
 
 // ═══ YARDIMCI FONKSİYON: ÜNİTE (CHAPTER) SEÇİCİYİ DOLDUR ═══
 function populateChapterSelect(selectElementId) {
@@ -1009,7 +1075,6 @@ function populateChapterSelect(selectElementId) {
     const sel = document.getElementById(selectElementId);
     sel.innerHTML = l.chapters.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
 }
-
 
 // ═══ PDF YÖNETİMİ (STORAGE) ═══
 function openAddPdf(){ 
@@ -1344,17 +1409,44 @@ function renderLDQuestions(){
     if((q.chapterId||'default')!==activeChapterId) return '';
     const typeMap={mc:'Çoktan Seçmeli',tf:'Doğru/Yanlış',open:'Açık Uçlu'};
     const typeClass={mc:'tag-mc',tf:'tag-tf',open:'tag-open'};
+    
+    let ansHtml = '';
+    if(q.type === 'mc' && q.options) {
+        ansHtml = `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:12px">
+            ${q.options.map((o,oi)=>`
+                <span style="padding:6px 12px;border-radius:8px;font-size:13px;border:1px solid var(--border);
+                color:${oi===q.correct?'#fff':'var(--text)'};
+                background:${oi===q.correct?'var(--accent3)':'var(--surface2)'}; 
+                font-weight:${oi===q.correct?'700':'500'};
+                box-shadow:${oi===q.correct?'0 4px 12px var(--accent3-glow)':'none'}">
+                    ${String.fromCharCode(65+oi)}) ${o} ${oi===q.correct?' ✅':''}
+                </span>
+            `).join('')}
+        </div>`;
+    } else if(q.type === 'tf') {
+        ansHtml = `<div style="margin-top:12px;font-size:13px;background:var(--surface2);padding:10px 14px;border-radius:8px;border:1px solid var(--border);display:inline-flex;align-items:center;gap:8px;">
+            <span style="color:var(--text3)">Doğru Cevap:</span> 
+            <span style="color:var(--accent3);font-weight:700;font-size:14px;">${q.correct === 'true' ? '✅ Doğru' : '❌ Yanlış'}</span>
+        </div>`;
+    } else if(q.type === 'open') {
+        ansHtml = `<div style="margin-top:12px;font-size:13px;background:var(--surface2);padding:10px 14px;border-radius:8px;border:1px solid var(--border);display:inline-flex;align-items:center;gap:8px;">
+            <span style="color:var(--text3)">Cevap Anahtarı:</span> 
+            <span style="color:var(--accent3);font-weight:700;font-size:14px;">${q.answer || 'Belirtilmedi'}</span>
+        </div>`;
+    }
+
     return `<div class="q-item">
       <div class="q-num">${i+1}</div>
       <div class="q-body">
         <span class="q-type-tag ${typeClass[q.type]||'tag-mc'}">${typeMap[q.type]||q.type}</span>
-        <div class="q-text-preview">${q.text}</div>
-        ${q.options?`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px">${q.options.map((o,oi)=>`<span style="padding:4px 10px;border-radius:6px;font-size:12px;border:1px solid var(--border);color:${oi===q.correct?'var(--accent3)':'var(--text3)'};background:${oi===q.correct?'var(--accent3-glow)':'transparent'}">${String.fromCharCode(65+oi)}) ${o}</span>`).join('')}</div>`:''}
+        <div class="q-text-preview" style="font-weight:600; font-size:16px; margin-bottom:8px;">${q.text}</div>
+        ${(q.imgs&&q.imgs.length)||(q.img)?`<div style="display:flex;gap:8px;margin-top:8px;align-items:center;flex-wrap:wrap">${(q.imgs||[q.img]).slice(0,3).map((src,si)=>`<img src="${src}" class="q-img-thumb" style="cursor:zoom-in; width:80px; height:60px; border-radius:8px; object-fit:cover; border:2px solid var(--border2);" onclick="openQThumb(${i},${si})">`).join('')}${(q.imgs||[q.img]).length>3?`<span style="font-size:11px;color:var(--text3);padding:4px 8px;background:var(--surface2);border-radius:6px;border:1px solid var(--border);font-weight:600;">+${(q.imgs||[q.img]).length-3} Görsel</span>`:''}</div>`:''}
+        ${ansHtml}
       </div>
-      <div class="q-actions">
-        <button class="btn btn-outline btn-sm" onclick="duplicateQ(${i})" title="Bu Soruyu Kopyala">📋 Kopyala</button>
-        <button class="btn btn-outline btn-sm" onclick="openEditQuestion(${i})">✏️ Düzenle</button>
-        <button class="btn btn-danger btn-sm" onclick="deleteQ(${i})">🗑️ Sil</button>
+      <div class="q-actions" style="flex-direction:column; gap:8px; align-items:flex-end;">
+        <button class="btn btn-outline btn-sm" onclick="duplicateQ(${i})" title="Bu Soruyu Kopyala" style="width:100px; justify-content:flex-start;">📋 Kopyala</button>
+        <button class="btn btn-outline btn-sm" onclick="openEditQuestion(${i})" style="width:100px; justify-content:flex-start;">✏️ Düzenle</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteQ(${i})" style="width:100px; justify-content:flex-start;">🗑️ Sil</button>
       </div>
     </div>`;
   }).join('');
@@ -1385,6 +1477,29 @@ function openAddQuestion(){
   document.getElementById('open-answer').value='';
   resetOpts();updateQUI();openModal('mo-question');
 }
+
+// ── ÇOKLU RESİM YÜKLEME ──
+function handleImgFiles(files){
+  const arr=Array.from(files);
+  arr.forEach(file=>{
+    const r=new FileReader();
+    r.onload=e=>{qImgData.push(e.target.result);renderImgGallery();};
+    r.readAsDataURL(file);
+  });
+  document.getElementById('img-file').value='';
+}
+function removeImg(i){ qImgData.splice(i,1);renderImgGallery(); }
+function renderImgGallery(){
+  const g=document.getElementById('img-gallery');
+  if(!qImgData.length){g.innerHTML='';return;}
+  g.innerHTML=qImgData.map((src,i)=>`
+    <div style="position:relative; width:80px; height:60px; border-radius:8px; overflow:hidden; border:2px solid var(--border);">
+      <img src="${src}" style="width:100%;height:100%;object-fit:cover;cursor:zoom-in;" onclick="openLightbox(${i},'modal')">
+      <button onclick="removeImg(${i})" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.7);color:white;border:none;border-radius:50%;width:20px;height:20px;font-size:10px;cursor:pointer;">✕</button>
+    </div>
+  `).join('');
+}
+
 function openEditQuestion(i){
   const q=questions[activeLessonId][i];if(!q)return;
   editingQuestionIndex=i;
@@ -1393,6 +1508,8 @@ function openEditQuestion(i){
   document.getElementById('q-chapter-select').value = q.chapterId || 'default';
   
   qImgData=q.imgs?[...q.imgs]:(q.img?[q.img]:[]);
+  renderImgGallery(); // Resimleri UI'a yükle
+  
   document.getElementById('mo-q-title').textContent='✏️ Soruyu Düzenle';
   document.getElementById('qt-select').value=q.type;
   document.getElementById('qt-text').value=q.text;
@@ -1774,6 +1891,10 @@ function renderExamQ(){
   document.getElementById('ex-sub').textContent=`Soru ${idx+1} / ${qs.length}`;
   document.getElementById('ex-prog').style.width=((idx+1)/qs.length*100)+'%';
   
+  const imgs=q.imgs||(q.img?[q.img]:[]);
+  window._examImgs=imgs;
+  const imgHtml=imgs.length?`<div class="eq-img-gallery${imgs.length===1?' single':''}">${imgs.map((src,si)=>`<img src="${src}" style="cursor:zoom-in; border-radius:8px; border:2px solid var(--border);" onclick="event.stopPropagation(); openLightbox(${si},window._examImgs)">`).join('')}</div>`:'';
+
   let optsHtml='';
   if(q.type==='mc'){
     optsHtml='<div class="eq-options">'+(q.options||[]).map((o,i)=>`<div class="eq-opt${answers[idx]===i?' sel':''}" onclick="pickAns(${i})"><div class="eq-letter">${String.fromCharCode(65+i)}</div>${o}</div>`).join('')+'</div>';
@@ -1782,7 +1903,7 @@ function renderExamQ(){
   } else {
     optsHtml=`<textarea class="form-textarea" placeholder="Buraya cevabınızı yazın..." onchange="pickAns(this.value)">${answers[idx]||''}</textarea>`;
   }
-  document.getElementById('ex-q-wrap').innerHTML=`<div class="exam-q-card"><div class="eq-num">${idx+1}. SORU</div><div class="eq-text">${q.text}</div>${optsHtml}</div>`;
+  document.getElementById('ex-q-wrap').innerHTML=`<div class="exam-q-card"><div class="eq-num">${idx+1}. SORU</div>${imgHtml}<div class="eq-text">${q.text}</div>${optsHtml}</div>`;
   document.getElementById('ex-prev').style.visibility=idx===0?'hidden':'visible';
   document.getElementById('ex-next').classList.toggle('hidden',idx===qs.length-1);
   document.getElementById('ex-finish').classList.toggle('hidden',idx!==qs.length-1);
