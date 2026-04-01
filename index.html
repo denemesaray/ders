@@ -194,7 +194,7 @@ body{
 
 .content{flex:1;padding:32px 28px;max-width:1200px;margin:0 auto;width:100%;}
 
-/* ── YENİ: DÜZENLİ CHAPTER TABS ── */
+/* ── CHAPTER TABS ── */
 .chapter-container {
   background: var(--surface2);
   border: 1px solid var(--border);
@@ -296,7 +296,7 @@ body{
 .tag-open{background:rgba(46,204,138,0.12);color:var(--accent3);}
 .q-text-preview{font-size:14px;line-height:1.6;color:var(--text);}
 .q-img-thumb{width:60px;height:44px;object-fit:cover;border-radius:6px;margin-top:10px;border:1px solid var(--border);}
-.q-actions{display:flex;gap:6px;flex-shrink:0;}
+.q-actions{display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap;}
 
 /* ── ANNOUNCEMENTS ── */
 .ann-card{
@@ -444,7 +444,7 @@ body{
 /* ── UTILS ── */
 .hidden{display:none!important;}
 .flex{display:flex;}.items-center{align-items:center;}.justify-between{justify-content:space-between;}
-.gap-2{gap:12px;} .gap-1{gap:6px;} .mt-3{margin-top:16px;}
+.gap-2{gap:12px;} .gap-1{gap:6px;} .mb-3{margin-bottom:16px;}
 .mono{font-family:'JetBrains Mono',monospace;}
 
 /* RESPONSIVE */
@@ -455,8 +455,9 @@ body{
   .admin-nav{padding:0 16px;}
   .stats-row{grid-template-columns:repeat(2,1fr);}
   .result-score{font-size:64px;}
-  .chapter-tabs-wrap { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 8px;} /* Mobilde yatay kaydırılsın */
+  .chapter-tabs-wrap { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 8px;} 
   .chapter-tab, .chapter-add-btn { flex-shrink: 0; }
+  .q-actions { width: 100%; justify-content: flex-start; }
 }
 </style>
 </head>
@@ -537,7 +538,7 @@ body{
         <div class="flex gap-2">
           <button class="btn btn-ghost btn-sm" onclick="adminTab('lessons')">← Geri Dön</button>
           <button class="btn btn-outline btn-sm" onclick="openEditLesson()">✏️ Dersi Düzenle</button>
-          <button class="btn btn-gold btn-sm" onclick="openAddPdf()">📄 Materyal (PDF) Yükle</button>
+          <button class="btn btn-gold btn-sm" onclick="openAddPdf()">📄 Materyal Yükle</button>
           <button class="btn btn-primary btn-sm" onclick="openAddQuestion()">+ Soru Ekle</button>
         </div>
       </div>
@@ -671,7 +672,17 @@ body{
       <div id="review-list"></div>
     </div>
 
-  </div></div><div class="overlay" id="mo-chapter">
+  </div></div><div class="overlay" id="mo-manage-chapters">
+  <div class="modal modal-md">
+    <div class="modal-title">⚙️ Ünite Yönetimi</div>
+    <div id="manage-chapters-list" style="display:flex;flex-direction:column;gap:12px;"></div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" onclick="closeModal('mo-manage-chapters')">Tamam</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="mo-chapter">
   <div class="modal modal-md">
     <div class="modal-title">📂 Ünite / Bölüm Ekle</div>
     <div class="form-group">
@@ -702,7 +713,22 @@ body{
 <div class="overlay" id="mo-question">
   <div class="modal modal-lg">
     <div class="modal-title" id="mo-q-title">❓ Soru Ekle</div>
-    <div class="form-group"><label class="form-label">Soru Tipi</label><select class="form-select" id="qt-select" onchange="updateQUI()"><option value="mc">Çoktan Seçmeli</option><option value="tf">Doğru / Yanlış</option><option value="open">Açık Uçlu (Klasik)</option></select></div>
+    
+    <div class="flex gap-2 mb-3">
+      <div class="form-group" style="flex:1; margin-bottom:0;">
+        <label class="form-label">Soru Tipi</label>
+        <select class="form-select" id="qt-select" onchange="updateQUI()">
+          <option value="mc">Çoktan Seçmeli</option>
+          <option value="tf">Doğru / Yanlış</option>
+          <option value="open">Açık Uçlu (Klasik)</option>
+        </select>
+      </div>
+      <div class="form-group" style="flex:1; margin-bottom:0;">
+        <label class="form-label">Ünite (Bölüm)</label>
+        <select class="form-select" id="q-chapter-select"></select>
+      </div>
+    </div>
+
     <div class="form-group"><label class="form-label">Soru Metni *</label><textarea class="form-textarea" id="qt-text" placeholder="Soruyu buraya yazın..."></textarea></div>
     <div class="form-group">
       <label class="form-label">Görseller <span style="font-weight:400;text-transform:none">(İsteğe bağlı, birden fazla eklenebilir)</span></label>
@@ -766,6 +792,12 @@ body{
 <div class="overlay" id="mo-pdf">
   <div class="modal modal-md">
     <div class="modal-title">📄 Materyal (PDF) Yükle</div>
+    
+    <div class="form-group">
+      <label class="form-label">Ünite (Bölüm)</label>
+      <select class="form-select" id="pdf-chapter-select"></select>
+    </div>
+
     <div class="form-group">
       <label class="form-label">Döküman Adı *</label>
       <input type="text" class="form-input" id="pdf-name-input" placeholder="Örn: Hücre Konu Anlatımı">
@@ -807,8 +839,7 @@ body{
   <iframe id="pdf-viewer-frame" class="pdf-viewer-frame" src="" style="background:#e5e5e5;"></iframe>
 </div>
 
-<div class="lightbox" id="lightbox" onclick="closeLightbox()" style="display:none;">
-  </div>
+<div class="lightbox" id="lightbox" onclick="closeLightbox()" style="display:none;"></div>
 
 <div id="toasts" style="position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:10px;"></div>
 
@@ -819,7 +850,6 @@ function toggleTheme() {
   localStorage.setItem('sl2_theme', isLight ? 'light' : 'dark');
   document.getElementById('themeBtn').textContent = isLight ? '🌙' : '☀️';
 }
-// Sayfa açılışında temayı yükle
 if(localStorage.getItem('sl2_theme') === 'light') {
   document.documentElement.classList.add('light-mode');
   document.getElementById('themeBtn').textContent = '🌙';
@@ -924,8 +954,22 @@ async function savePdfs(){await sSet(KEYS.pdfs,lessonPdfs);}
 const allPages=['pg-lessons','pg-lesson-detail','pg-settings','pg-history','pg-student-home','pg-student-chapters','pg-exam','pg-result','pg-review','pg-announcements'];
 function showPage(id){allPages.forEach(p=>document.getElementById(p)?.classList.add('hidden'));document.getElementById(id)?.classList.remove('hidden');}
 
+
+// ═══ YARDIMCI FONKSİYON: ÜNİTE (CHAPTER) SEÇİCİYİ DOLDUR ═══
+function populateChapterSelect(selectElementId) {
+    const l = lessons.find(x => x.id === activeLessonId);
+    const sel = document.getElementById(selectElementId);
+    sel.innerHTML = l.chapters.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+}
+
+
 // ═══ PDF YÖNETİMİ (STORAGE) ═══
-function openAddPdf(){ resetPdfModal(); openModal('mo-pdf'); }
+function openAddPdf(){ 
+  resetPdfModal(); 
+  populateChapterSelect('pdf-chapter-select');
+  document.getElementById('pdf-chapter-select').value = activeChapterId;
+  openModal('mo-pdf'); 
+}
 function resetPdfModal(){
   pendingPdfFile=null;
   document.getElementById('pdf-name-input').value='';
@@ -946,6 +990,7 @@ function handlePdfFile(file){
 
 async function savePdf(){
   const name=document.getElementById('pdf-name-input').value.trim();
+  const selectedChapter = document.getElementById('pdf-chapter-select').value;
   if(!name)return toast('Lütfen PDF adını girin!','err');
   if(!pendingPdfFile)return toast('Lütfen bir dosya seçin!','err');
 
@@ -964,7 +1009,7 @@ async function savePdf(){
       url: downloadURL, 
       size: Math.round(pendingPdfFile.size/1024)+' KB', 
       date: Date.now(), 
-      chapterId: activeChapterId 
+      chapterId: selectedChapter 
     };
     
     lessonPdfs[activeLessonId].push(pdf);
@@ -1146,6 +1191,64 @@ async function saveChapter(){
   renderLDPdfs();
   toast('Yeni ünite eklendi','ok');
 }
+
+function openManageChapters(){
+    renderManageChapters();
+    openModal('mo-manage-chapters');
+}
+function renderManageChapters(){
+    const l = lessons.find(x => x.id === activeLessonId);
+    const list = document.getElementById('manage-chapters-list');
+    list.innerHTML = l.chapters.map(c => `
+      <div style="display:flex; justify-content:space-between; align-items:center; background:var(--surface2); padding:12px 16px; border-radius:var(--rs); border:1px solid var(--border);">
+        <div style="font-weight:600; font-size:14px;">${c.name} ${c.id==='default'?'<span style="font-size:11px;color:var(--text3);font-weight:400;margin-left:6px;">(Silinemez)</span>':''}</div>
+        <div style="display:flex; gap:8px;">
+           <button class="btn btn-outline btn-sm" onclick="renameChapter('${c.id}')">✏️ Adını Değiştir</button>
+           ${c.id !== 'default' ? `<button class="btn btn-danger btn-sm" onclick="deleteChapter('${c.id}')">🗑️ Sil</button>` : ''}
+        </div>
+      </div>
+    `).join('');
+}
+async function renameChapter(cid){
+    const l = lessons.find(x => x.id === activeLessonId);
+    const c = l.chapters.find(x => x.id === cid);
+    const newName = prompt('Yeni ünite adı nedir?', c.name);
+    if(newName && newName.trim()) {
+        c.name = newName.trim();
+        await saveData();
+        renderManageChapters();
+        renderLDChapters();
+        renderLDQuestions();
+        toast('Ünite adı güncellendi', 'ok');
+    }
+}
+async function deleteChapter(cid){
+    if(cid === 'default') return;
+    if(!confirm('Bu üniteyi silmek istediğinize emin misiniz? (İçindeki sorular ve materyaller silinmez, güvenli bir şekilde varsayılan "Genel" ünitesine taşınır.)')) return;
+    
+    const l = lessons.find(x => x.id === activeLessonId);
+    l.chapters = l.chapters.filter(x => x.id !== cid);
+    
+    // Move contents to default
+    if(questions[activeLessonId]) {
+        questions[activeLessonId].forEach(q => { if(q.chapterId === cid) q.chapterId = 'default'; });
+    }
+    if(lessonPdfs[activeLessonId]) {
+        lessonPdfs[activeLessonId].forEach(p => { if(p.chapterId === cid) p.chapterId = 'default'; });
+    }
+    
+    if(activeChapterId === cid) activeChapterId = 'default';
+    
+    await saveData();
+    await savePdfs();
+    
+    renderManageChapters();
+    renderLDChapters();
+    renderLDQuestions();
+    renderLDPdfs();
+    toast('Ünite silindi, içerikler taşındı', 'ok');
+}
+
 function selectChapter(cid){
   activeChapterId=cid;
   renderLDChapters();
@@ -1159,12 +1262,14 @@ function renderLDChapters(){
   }
   const wrap=document.getElementById('ld-chapter-tabs');
   
-  // HTML yapısını flex-wrap ile destekleyecek şekilde yazıyoruz (CSS eklendi)
   wrap.innerHTML=l.chapters.map(c=>`
       <div class="chapter-tab ${c.id===activeChapterId?'active':''}" onclick="selectChapter('${c.id}')">
           ${c.name}
       </div>
-  `).join('')+`<button class="chapter-add-btn" onclick="openAddChapter()">+ Ünite Ekle</button>`;
+  `).join('')+`
+      <button class="chapter-add-btn" onclick="openAddChapter()">+ Ünite Ekle</button>
+      <button class="chapter-add-btn" style="border-style:solid;" onclick="openManageChapters()">⚙️ Düzenle</button>
+  `;
 }
 
 // ═══ İÇERİK YÖNETİMİ (SORULAR) ═══
@@ -1199,8 +1304,9 @@ function renderLDQuestions(){
         ${q.options?`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px">${q.options.map((o,oi)=>`<span style="padding:4px 10px;border-radius:6px;font-size:12px;border:1px solid var(--border);color:${oi===q.correct?'var(--accent3)':'var(--text3)'};background:${oi===q.correct?'var(--accent3-glow)':'transparent'}">${String.fromCharCode(65+oi)}) ${o}</span>`).join('')}</div>`:''}
       </div>
       <div class="q-actions">
-        <button class="btn btn-outline btn-sm" onclick="openEditQuestion(${i})">Düzenle</button>
-        <button class="btn btn-danger btn-sm" onclick="deleteQ(${i})">Sil</button>
+        <button class="btn btn-outline btn-sm" onclick="duplicateQ(${i})" title="Bu Soruyu Kopyala">📋 Kopyala</button>
+        <button class="btn btn-outline btn-sm" onclick="openEditQuestion(${i})">✏️ Düzenle</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteQ(${i})">🗑️ Sil</button>
       </div>
     </div>`;
   }).join('');
@@ -1211,8 +1317,20 @@ async function deleteQ(i){
   questions[activeLessonId].splice(i,1);await saveData();renderLDQuestions();toast('Soru silindi','ok');
 }
 
+async function duplicateQ(i) {
+    const q = questions[activeLessonId][i];
+    const newQ = JSON.parse(JSON.stringify(q)); // Derin Kopyalama (Deep Copy)
+    questions[activeLessonId].push(newQ);
+    await saveData();
+    renderLDQuestions();
+    toast('Soru başarıyla kopyalandı! Düzenleyebilirsin.', 'ok');
+}
+
 function openAddQuestion(){
   editingQuestionIndex=null;qImgData=[];
+  populateChapterSelect('q-chapter-select');
+  document.getElementById('q-chapter-select').value = activeChapterId;
+  
   document.getElementById('mo-q-title').textContent='❓ Yeni Soru Ekle';
   document.getElementById('qt-text').value='';
   document.getElementById('img-gallery').innerHTML='';
@@ -1222,6 +1340,10 @@ function openAddQuestion(){
 function openEditQuestion(i){
   const q=questions[activeLessonId][i];if(!q)return;
   editingQuestionIndex=i;
+  
+  populateChapterSelect('q-chapter-select');
+  document.getElementById('q-chapter-select').value = q.chapterId || 'default';
+  
   qImgData=q.imgs?[...q.imgs]:(q.img?[q.img]:[]);
   document.getElementById('mo-q-title').textContent='✏️ Soruyu Düzenle';
   document.getElementById('qt-select').value=q.type;
@@ -1303,9 +1425,12 @@ function pickTF(v){
 }
 
 async function saveQuestion(){
-  const type=document.getElementById('qt-select').value,text=document.getElementById('qt-text').value.trim();
+  const type=document.getElementById('qt-select').value;
+  const text=document.getElementById('qt-text').value.trim();
+  const selectedChapter = document.getElementById('q-chapter-select').value;
+  
   if(!text)return toast('Lütfen soru metnini yazın!','err');
-  let q={type,text,imgs:qImgData.length?[...qImgData]:undefined, chapterId: activeChapterId};
+  let q={type,text,imgs:qImgData.length?[...qImgData]:undefined, chapterId: selectedChapter};
   
   if(type==='mc'){
     const opts=[...document.querySelectorAll('#opts-wrap input')].map(i=>i.value.trim()).filter(Boolean);
@@ -1325,6 +1450,12 @@ async function saveQuestion(){
     questions[activeLessonId].push(q);
     toast('Soru başarıyla eklendi','ok');
   }
+  
+  // Eğer başka üniteye taşındıysa UI'da görünmeyebilir, uyaralım.
+  if(selectedChapter !== activeChapterId) {
+      toast('Soru diğer üniteye taşındı/eklendi.', 'info');
+  }
+  
   await saveData();closeModal('mo-question');renderLDQuestions();
 }
 
