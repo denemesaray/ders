@@ -52,7 +52,7 @@ body{
 @keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 
 /* ── SCROLLBAR ── */
-::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar{width:4px;height:4px;}
 ::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:2px;}
 
@@ -187,6 +187,14 @@ body{
 .admin-nav-item.active{color:var(--accent);border-bottom-color:var(--accent);}
 
 .content{flex:1;padding:28px 24px;max-width:1120px;margin:0 auto;width:100%;}
+
+/* ── CHAPTER TABS ── */
+.chapter-tabs-wrap { display: flex; gap: 8px; margin-bottom: 24px; overflow-x: auto; padding-bottom: 4px; }
+.chapter-tab { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--rs); padding: 8px 16px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: all 0.2s; color: var(--text2); }
+.chapter-tab:hover { border-color: var(--border2); color: var(--text); }
+.chapter-tab.active { background: var(--surface3); border-color: var(--accent); color: var(--accent); }
+.chapter-add-btn { background: transparent; border: 1px dashed var(--border2); border-radius: var(--rs); padding: 8px 16px; font-size: 13px; font-weight: 600; cursor: pointer; color: var(--text3); transition: all 0.2s; white-space: nowrap; }
+.chapter-add-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-glow); }
 
 /* ── SECTION HEAD ── */
 .section-head{
@@ -354,12 +362,6 @@ body{
 }
 .pdf-viewer-title{font-size:14px;font-weight:700;color:var(--text);}
 .pdf-viewer-frame{flex:1;border:none;background:white;}
-.pdf-nav{
-  background:var(--surface);border-top:1px solid var(--border);
-  padding:10px 20px;display:flex;align-items:center;justify-content:center;gap:12px;
-  flex-shrink:0;
-}
-.pdf-page-info{font-size:13px;color:var(--text2);font-family:'JetBrains Mono',monospace;}
 
 /* ── UPLOAD ── */
 .upload-zone{
@@ -380,7 +382,6 @@ body{
 .img-gallery-item{
   position:relative;border-radius:var(--rs);overflow:hidden;
   border:1px solid var(--border);aspect-ratio:4/3;background:var(--surface3);
-  group:hover;
 }
 .img-gallery-item img{
   width:100%;height:100%;object-fit:cover;display:block;
@@ -569,15 +570,8 @@ body{
 
 /* ── UTILS ── */
 .hidden{display:none!important;}
-.chip{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:4px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.4px;}
-.chip-red{background:rgba(255,95,61,0.12);color:var(--accent);}
-.chip-blue{background:rgba(74,144,255,0.12);color:var(--accent2);}
-.chip-green{background:rgba(46,204,138,0.12);color:var(--accent3);}
-.chip-gold{background:rgba(245,200,66,0.12);color:var(--gold);}
-.chip-gray{background:var(--surface2);color:var(--text2);}
 .flex{display:flex;}.items-center{align-items:center;}.justify-between{justify-content:space-between;}
 .gap-2{gap:8px;}.gap-1{gap:4px;}.mt-2{margin-top:8px;}.mt-3{margin-top:12px;}.mb-2{margin-bottom:8px;}
-.text-muted{color:var(--text3);}
 .mono{font-family:'JetBrains Mono',monospace;}
 .student-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;}
 
@@ -595,17 +589,6 @@ body{
 .type-warn .ann-type-badge{background:rgba(245,200,66,0.12);color:var(--gold);}
 .type-success .ann-type-badge{background:rgba(46,204,138,0.12);color:var(--accent3);}
 .type-urgent .ann-type-badge{background:rgba(255,95,61,0.12);color:var(--accent);}
-
-/* ── LESSON DETAIL ── */
-.ld-header{
-  background:var(--surface);border:1px solid var(--border);
-  border-radius:var(--r);padding:20px 22px;margin-bottom:20px;
-  display:flex;align-items:center;gap:16px;
-}
-.ld-emoji-big{font-size:40px;}
-.ld-info{flex:1;}
-.ld-lesson-title{font-size:20px;font-weight:800;letter-spacing:-0.5px;}
-.ld-lesson-sub{font-size:12px;color:var(--text3);margin-top:3px;}
 
 /* ── REVIEW ── */
 .review-item{
@@ -630,7 +613,6 @@ body{
 </head>
 <body>
 
-<!-- ── LOGIN ── -->
 <div class="login-wrap" id="loginWrap">
   <div class="login-bg-grid"></div>
   <div class="login-bg-orb"></div>
@@ -665,7 +647,6 @@ body{
   </div>
 </div>
 
-<!-- ── APP ── -->
 <div class="app" id="app">
   <header class="topbar">
     <div class="topbar-brand">Sınıf<span>Lab</span></div>
@@ -687,7 +668,6 @@ body{
 
   <div class="content">
 
-    <!-- DERSLER -->
     <div id="pg-lessons">
       <div class="section-head">
         <div>
@@ -700,9 +680,8 @@ body{
       <div class="grid-auto" id="lessons-grid"></div>
     </div>
 
-    <!-- DERS DETAY -->
     <div id="pg-lesson-detail" class="hidden">
-      <div class="section-head">
+      <div class="section-head" style="margin-bottom:12px;">
         <div>
           <div class="section-title" id="ld-title">Ders</div>
           <div class="section-sub" id="ld-sub"></div>
@@ -715,15 +694,16 @@ body{
           <button class="btn btn-primary btn-sm" onclick="openAddQuestion()">+ Soru Ekle</button>
         </div>
       </div>
-      <!-- PDF Materyaller -->
+      
+      <div class="chapter-tabs-wrap" id="ld-chapter-tabs"></div>
+
       <div id="ld-pdfs-section" class="hidden" style="margin-bottom:20px">
-        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--text3);margin-bottom:10px;">📄 Ders Materyalleri (PDF)</div>
+        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--text3);margin-bottom:10px;">📄 Ünite Materyalleri (PDF)</div>
         <div id="ld-pdfs"></div>
       </div>
       <div id="ld-questions"></div>
     </div>
 
-    <!-- DUYURULAR (Admin) -->
     <div id="pg-announcements" class="hidden">
       <div class="section-head">
         <div>
@@ -735,7 +715,6 @@ body{
       <div id="ann-list-admin"></div>
     </div>
 
-    <!-- AYARLAR -->
     <div id="pg-settings" class="hidden">
       <div class="section-head"><div class="section-title">Ayarlar</div></div>
       <div class="card" style="max-width:500px">
@@ -764,7 +743,6 @@ body{
       </div>
     </div>
 
-    <!-- GEÇMİŞ -->
     <div id="pg-history" class="hidden">
       <div class="section-head">
         <div class="section-title">Sınav Geçmişi</div>
@@ -773,22 +751,29 @@ body{
       <div id="history-list"></div>
     </div>
 
-    <!-- ÖĞRENCİ ANA SAYFA -->
     <div id="pg-student-home" class="hidden">
       <div class="section-head">
         <div>
           <div class="section-title">Merhaba, <span id="student-name-display" style="color:var(--accent2)"></span>! 👋</div>
-          <div class="section-sub">Hangi derste sınav olmak istiyorsun?</div>
+          <div class="section-sub">Hangi derse çalışmak istiyorsun?</div>
         </div>
       </div>
-      <!-- Duyuru bandı (öğrencilere) -->
       <div id="student-ann-banner" class="hidden"></div>
-      <!-- Duyurular listesi öğrenci -->
       <div id="student-ann-list" class="hidden" style="margin-bottom:24px"></div>
       <div class="student-grid" id="student-lessons-grid"></div>
     </div>
 
-    <!-- SINAV -->
+    <div id="pg-student-chapters" class="hidden">
+      <div class="section-head">
+        <div>
+          <div class="section-title" id="sc-title">Ders</div>
+          <div class="section-sub">Üniteler (Bölümler)</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="showPage('pg-student-home');renderStudentHome()">← Derslere Dön</button>
+      </div>
+      <div class="student-grid" id="sc-grid"></div>
+    </div>
+
     <div id="pg-exam" class="hidden">
       <div class="exam-bar">
         <div class="exam-bar-info">
@@ -811,7 +796,6 @@ body{
       </div>
     </div>
 
-    <!-- SONUÇ -->
     <div id="pg-result" class="hidden">
       <div class="result-wrap">
         <div class="result-box">
@@ -831,7 +815,6 @@ body{
       </div>
     </div>
 
-    <!-- İNCELEME -->
     <div id="pg-review" class="hidden">
       <div class="section-head">
         <div class="section-title">Sınav İncelemesi</div>
@@ -840,12 +823,20 @@ body{
       <div id="review-list"></div>
     </div>
 
-  </div><!-- /content -->
-</div><!-- /app -->
+  </div></div><div class="overlay" id="mo-chapter">
+  <div class="modal modal-md">
+    <div class="modal-title">📂 Ünite/Bölüm Ekle</div>
+    <div class="form-group">
+      <label class="form-label">Ünite Adı *</label>
+      <input type="text" class="form-input" id="chap-name-input" placeholder="Örn: Ünite 1 - Sayılar">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('mo-chapter')">İptal</button>
+      <button class="btn btn-primary btn-sm" onclick="saveChapter()">Kaydet</button>
+    </div>
+  </div>
+</div>
 
-<!-- ── MODALS ── -->
-
-<!-- DERS EKLE/DÜZENLE -->
 <div class="overlay" id="mo-lesson">
   <div class="modal modal-md">
     <div class="modal-title" id="mo-lesson-title">📖 Ders Ekle</div>
@@ -860,7 +851,6 @@ body{
   </div>
 </div>
 
-<!-- SORU EKLE/DÜZENLE -->
 <div class="overlay" id="mo-question">
   <div class="modal modal-lg">
     <div class="modal-title" id="mo-q-title">❓ Soru Ekle</div>
@@ -903,7 +893,6 @@ body{
   </div>
 </div>
 
-<!-- TOPLU EKLE -->
 <div class="overlay" id="mo-bulk">
   <div class="modal modal-lg">
     <div class="modal-title">📋 Toplu Soru Ekle</div>
@@ -916,7 +905,6 @@ body{
   </div>
 </div>
 
-<!-- SINAV AYARLARI -->
 <div class="overlay" id="mo-exam-cfg">
   <div class="modal modal-md">
     <div class="modal-title">🎯 Sınav Başlat</div>
@@ -943,7 +931,6 @@ body{
   </div>
 </div>
 
-<!-- DUYURU EKLE/DÜZENLE -->
 <div class="overlay" id="mo-ann">
   <div class="modal modal-md">
     <div class="modal-title" id="mo-ann-title">📢 Duyuru Ekle</div>
@@ -969,7 +956,6 @@ body{
   </div>
 </div>
 
-<!-- ÖĞRENCİ PDF MODAL -->
 <div class="overlay" id="mo-student-pdfs">
   <div class="modal modal-md">
     <div class="modal-title" id="mo-student-pdfs-title">📄 Materyaller</div>
@@ -980,7 +966,6 @@ body{
   </div>
 </div>
 
-<!-- PDF EKLE MODAL -->
 <div class="overlay" id="mo-pdf">
   <div class="modal modal-md">
     <div class="modal-title">📄 PDF Materyal Ekle</div>
@@ -997,7 +982,7 @@ body{
         onclick="document.getElementById('pdf-file').click()">
         <div class="uz-icon">📄</div>
         <div class="uz-text" id="pdf-zone-text">Tıkla veya PDF sürükle bırak</div>
-        <div class="uz-sub">Yalnızca PDF — maks 5MB</div>
+        <div class="uz-sub">Sınırsız Boyut Mümkündür</div>
       </div>
       <input type="file" id="pdf-file" accept="application/pdf" class="hidden" onchange="handlePdfFile(this.files[0])">
     </div>
@@ -1008,7 +993,6 @@ body{
   </div>
 </div>
 
-<!-- PDF VIEWER -->
 <div class="pdf-viewer-wrap" id="pdf-viewer">
   <div class="pdf-viewer-bar">
     <div class="pdf-viewer-title" id="pdf-viewer-title">PDF</div>
@@ -1020,7 +1004,6 @@ body{
   <iframe id="pdf-viewer-frame" class="pdf-viewer-frame" src=""></iframe>
 </div>
 
-<!-- LIGHTBOX -->
 <div class="lightbox" id="lightbox" onclick="closeLightbox()">
   <button class="lightbox-close" onclick="closeLightbox()">✕</button>
   <button class="lightbox-nav lightbox-prev" onclick="event.stopPropagation();lbNav(-1)">‹</button>
@@ -1063,7 +1046,7 @@ async function sSetPrivate(k,v){return sSet(k,v,false);}
 // ═══ STATE ═══
 let role=null,currentUser=null;
 let lessons=[],questions={},history=[],announcements=[],lessonPdfs={};
-let activeLessonId=null,examState={},examCfg={count:5,time:0};
+let activeLessonId=null, activeChapterId=null, examState={},examCfg={count:5,time:0};
 let qImgData=[],correctOptIdx=0,selectedTF=null,editingQuestionIndex=null;
 let editingLessonId=null,editingAnnId=null;
 let pendingPdfData=null,pendingPdfName=null;
@@ -1114,6 +1097,13 @@ async function loadData(){
   history=(await sGet(KEYS.history))||[];
   announcements=(await sGet(KEYS.announcements))||[];
   lessonPdfs=(await sGet(KEYS.pdfs))||{};
+  
+  // Backward compatibility: ensure all lessons have at least 'default' chapter
+  lessons.forEach(l => {
+      if(!l.chapters || !l.chapters.length) {
+          l.chapters = [{id: 'default', name: 'Genel'}];
+      }
+  });
 }
 async function saveData(){await sSet(KEYS.lessons,lessons);await sSet(KEYS.questions,questions);}
 async function saveHistory(){await sSet(KEYS.history,history);}
@@ -1121,7 +1111,7 @@ async function saveAnnouncements(){await sSet(KEYS.announcements,announcements);
 async function savePdfs(){await sSet(KEYS.pdfs,lessonPdfs);}
 
 // ═══ PAGES ═══
-const allPages=['pg-lessons','pg-lesson-detail','pg-settings','pg-history','pg-student-home','pg-exam','pg-result','pg-review','pg-announcements'];
+const allPages=['pg-lessons','pg-lesson-detail','pg-settings','pg-history','pg-student-home','pg-student-chapters','pg-exam','pg-result','pg-review','pg-announcements'];
 function showPage(id){allPages.forEach(p=>document.getElementById(p)?.classList.add('hidden'));document.getElementById(id)?.classList.remove('hidden');}
 
 // ═══ PDF ═══
@@ -1139,7 +1129,7 @@ function resetPdfModal(){
 function handlePdfFile(file){
   if(!file)return;
   if(file.type!=='application/pdf')return toast('Sadece PDF kabul edilir!','err');
-  if(file.size>5*1024*1024)return toast('PDF boyutu maksimum 5MB olabilir!','err');
+  // Removed size limit as requested
   const r=new FileReader();
   r.onload=e=>{
     pendingPdfData=e.target.result;
@@ -1161,9 +1151,9 @@ async function savePdf(){
   if(!name)return toast('PDF adı gir!','err');
   if(!pendingPdfData)return toast('PDF dosyası seç!','err');
   if(!lessonPdfs[activeLessonId])lessonPdfs[activeLessonId]=[];
-  const pdf={id:'p_'+Date.now(),name,data:pendingPdfData,size:Math.round(pendingPdfData.length*0.75/1024)+' KB',date:Date.now()};
+  const pdf={id:'p_'+Date.now(),name,data:pendingPdfData,size:Math.round(pendingPdfData.length*0.75/1024)+' KB',date:Date.now(), chapterId: activeChapterId};
   lessonPdfs[activeLessonId].push(pdf);
-  toast('PDF kaydediliyor…','info');
+  toast('PDF kaydediliyor… (Boyuta göre uzayabilir)','info');
   const ok=await savePdfs();
   if(ok===false)return toast('Kayıt başarısız!','err');
   toast('PDF eklendi','ok');
@@ -1176,7 +1166,8 @@ async function deletePdf(id){
   await savePdfs();renderLDPdfs();toast('PDF silindi','ok');
 }
 function renderLDPdfs(){
-  const pdfs=lessonPdfs[activeLessonId]||[];
+  const allPdfs=lessonPdfs[activeLessonId]||[];
+  const pdfs=allPdfs.filter(p=>(p.chapterId||'default')===activeChapterId);
   const section=document.getElementById('ld-pdfs-section');
   const list=document.getElementById('ld-pdfs');
   if(!pdfs.length){section.classList.add('hidden');return;}
@@ -1195,7 +1186,6 @@ function renderLDPdfs(){
     </div>`).join('');
 }
 function openPdfViewer(id){
-  // Find PDF in current lesson or all lessons
   let pdf=null;
   for(const lid of Object.keys(lessonPdfs)){
     pdf=(lessonPdfs[lid]||[]).find(p=>p.id===id);
@@ -1242,11 +1232,11 @@ function renderAdminLessons(){
         <div class="lc-name">${l.name}</div>
         <div class="lc-desc">${l.desc||''}</div>
         <div class="lc-meta">
-          <span class="lc-meta-badge">${qc} soru</span>
-          ${l.created?`<span style="font-size:10px;color:var(--text3)">${new Date(l.created).toLocaleDateString('tr')}</span>`:''}
+          <span class="lc-meta-badge">${l.chapters?l.chapters.length:1} Ünite</span>
+          <span class="lc-meta-badge">${qc} Soru</span>
         </div>
-        <div class="lc-actions">
-          <button class="btn btn-blue btn-sm" onclick="openLessonDetail('${l.id}')">📝 Sorular</button>
+        <div class="lc-actions" style="margin-top:8px">
+          <button class="btn btn-blue btn-sm" onclick="openLessonDetail('${l.id}')">📝 İçerik Yönetimi</button>
           <button class="btn btn-outline btn-sm" onclick="openEditLesson('${l.id}')">✏️</button>
           <button class="btn btn-danger btn-sm" onclick="deleteLessonAdmin('${l.id}')">🗑️</button>
         </div>
@@ -1287,7 +1277,7 @@ async function saveLesson(){
     toast('Ders güncellendi','ok');
   } else {
     const id='l_'+Date.now();
-    lessons.push({id,name,emoji,desc,color,created:Date.now()});
+    lessons.push({id,name,emoji,desc,color,created:Date.now(), chapters:[{id:'default', name:'Genel'}]});
     questions[id]=[];
     toast('Ders eklendi','ok');
   }
@@ -1306,23 +1296,68 @@ async function deleteLessonAdmin(id){
   await saveData();renderAdminLessons();toast('Ders silindi','ok');
 }
 
+// ═══ CHAPTERS (Admin) ═══
+function openAddChapter(){
+  document.getElementById('chap-name-input').value='';
+  openModal('mo-chapter');
+}
+async function saveChapter(){
+  const name=document.getElementById('chap-name-input').value.trim();
+  if(!name)return toast('Ünite adı gir!','err');
+  const l=lessons.find(x=>x.id===activeLessonId);
+  const cid='c_'+Date.now();
+  l.chapters.push({id: cid, name});
+  activeChapterId=cid;
+  await saveData();
+  closeModal('mo-chapter');
+  renderLDChapters();
+  renderLDQuestions();
+  renderLDPdfs();
+  toast('Ünite eklendi','ok');
+}
+function selectChapter(cid){
+  activeChapterId=cid;
+  renderLDChapters();
+  renderLDQuestions();
+  renderLDPdfs();
+}
+function renderLDChapters(){
+  const l=lessons.find(x=>x.id===activeLessonId);
+  if(!activeChapterId || !l.chapters.find(c=>c.id===activeChapterId)){
+      activeChapterId = l.chapters[0].id;
+  }
+  const wrap=document.getElementById('ld-chapter-tabs');
+  wrap.innerHTML=l.chapters.map(c=>`
+      <div class="chapter-tab ${c.id===activeChapterId?'active':''}" onclick="selectChapter('${c.id}')">
+          ${c.name}
+      </div>
+  `).join('')+`<button class="chapter-add-btn" onclick="openAddChapter()">+ Ünite Ekle</button>`;
+}
+
 // ═══ LESSON DETAIL ═══
 function openLessonDetail(id){
   activeLessonId=id;
   const l=lessons.find(x=>x.id===id);
   document.getElementById('ld-title').textContent=l.emoji+' '+l.name;
-  document.getElementById('ld-sub').textContent=`${(questions[id]||[]).length} soru`;
-  showPage('pg-lesson-detail');renderLDQuestions();renderLDPdfs();
+  showPage('pg-lesson-detail');
+  renderLDChapters();
+  renderLDQuestions();
+  renderLDPdfs();
 }
 
 function renderLDQuestions(){
-  const qs=questions[activeLessonId]||[];
-  document.getElementById('ld-sub').textContent=`${qs.length} soru`;
-  if(!qs.length){
-    document.getElementById('ld-questions').innerHTML='<div class="empty"><div class="ei">❓</div><div class="et">Henüz soru yok</div><div class="es">Soru ekle butonuna tıkla</div></div>';
+  const allQs=questions[activeLessonId]||[];
+  const chapterQs=allQs.filter(q=>(q.chapterId||'default')===activeChapterId);
+  document.getElementById('ld-sub').textContent=`Seçili Ünitede: ${chapterQs.length} soru`;
+  
+  if(!chapterQs.length){
+    document.getElementById('ld-questions').innerHTML='<div class="empty"><div class="ei">❓</div><div class="et">Bu ünitede henüz soru yok</div><div class="es">Soru ekle butonuna tıkla</div></div>';
     return;
   }
-  document.getElementById('ld-questions').innerHTML=qs.map((q,i)=>{
+  
+  // Index trick to keep original references intact for edit/delete
+  document.getElementById('ld-questions').innerHTML=allQs.map((q,i)=>{
+    if((q.chapterId||'default')!==activeChapterId) return '';
     const typeMap={mc:'Çoktan Seçmeli',tf:'D/Y',open:'Açık Uçlu'};
     const typeClass={mc:'tag-mc',tf:'tag-tf',open:'tag-open'};
     return `<div class="q-item">
@@ -1358,7 +1393,6 @@ function openAddQuestion(){
 function openEditQuestion(i){
   const q=questions[activeLessonId][i];if(!q)return;
   editingQuestionIndex=i;
-  // Support both old single img and new imgs array
   qImgData=q.imgs?[...q.imgs]:(q.img?[q.img]:[]);
   document.getElementById('mo-q-title').textContent='✏️ Soruyu Düzenle';
   document.getElementById('qt-select').value=q.type;
@@ -1396,6 +1430,7 @@ function addOpt(v='',isCorrect=false){
 }
 function setCorrect(i){correctOptIdx=i;document.querySelectorAll('.opt-correct-btn').forEach((b,bi)=>b.classList.toggle('on',bi===i));}
 function pickTF(v){selectedTF=v;document.getElementById('tf-t').classList.toggle('on',v==='true');document.getElementById('tf-f').classList.toggle('on',v==='false');}
+
 // ── MULTI-IMAGE HANDLING ──
 function handleImgFiles(files){
   const arr=Array.from(files);
@@ -1404,7 +1439,6 @@ function handleImgFiles(files){
     r.onload=e=>{qImgData.push(e.target.result);renderImgGallery();};
     r.readAsDataURL(file);
   });
-  // Reset input so same file can be re-added
   document.getElementById('img-file').value='';
 }
 function handleImgDrop(e){
@@ -1433,7 +1467,6 @@ function renderImgGallery(){
 // ── LIGHTBOX ──
 let lbImages=[],lbIdx=0;
 function openLightbox(idx,src){
-  // src='modal' uses qImgData, else array of srcs
   lbImages=src==='modal'?qImgData:src;
   lbIdx=idx;
   document.getElementById('lightbox-img').src=lbImages[lbIdx];
@@ -1464,7 +1497,7 @@ document.addEventListener('keydown',e=>{
 async function saveQuestion(){
   const type=document.getElementById('qt-select').value,text=document.getElementById('qt-text').value.trim();
   if(!text)return toast('Soru metnini gir!','err');
-  let q={type,text,imgs:qImgData.length?[...qImgData]:undefined};
+  let q={type,text,imgs:qImgData.length?[...qImgData]:undefined, chapterId: activeChapterId};
   if(type==='mc'){
     const opts=[...document.querySelectorAll('#opts-wrap input')].map(i=>i.value.trim()).filter(Boolean);
     if(!opts.length)return toast('En az bir seçenek gir!','err');
@@ -1497,7 +1530,7 @@ async function saveBulk(){
       const correct=lastPart.toUpperCase().charCodeAt(0)-65;
       const opts=p.slice(1,-1).filter(Boolean);
       if(opts.length>0){
-        questions[activeLessonId].push({type:'mc',text:p[0],options:opts,correct:Math.min(correct,opts.length-1)});
+        questions[activeLessonId].push({type:'mc',text:p[0],options:opts,correct:Math.min(correct,opts.length-1), chapterId: activeChapterId});
         added++;
       }
     }
@@ -1609,7 +1642,7 @@ function renderHistory(){
 }
 async function clearHistory(){if(!confirm('Tüm geçmiş silinsin mi?'))return;history=[];await saveHistory();renderHistory();toast('Geçmiş temizlendi','ok');}
 
-// ═══ STUDENT HOME ═══
+// ═══ STUDENT HOME & CHAPTERS ═══
 function renderStudentHome(){
   document.getElementById('student-name-display').textContent=currentUser;
   
@@ -1646,30 +1679,68 @@ function renderStudentHome(){
   grid.innerHTML=lessons.map(l=>{
     const color=l.color||'#ff5f3d';
     const qc=(questions[l.id]||[]).length;
-    const pdfCount=(lessonPdfs[l.id]||[]).length;
-    return `<div class="sl-card" onclick="openExamCfg('${l.id}')">
+    return `<div class="sl-card" onclick="openStudentLesson('${l.id}')">
       <div class="sl-stripe" style="background:${color}"></div>
       <div class="sl-body">
         <span class="sl-emoji">${l.emoji}</span>
         <div class="sl-name">${l.name}</div>
-        <div class="sl-meta">${qc} soru mevcut${pdfCount?` · ${pdfCount} PDF`:''}</div>
-        ${pdfCount?`<button class="btn btn-gold btn-sm" style="margin-bottom:6px;width:100%" onclick="event.stopPropagation();openStudentPdfs('${l.id}')">📄 Materyalleri Gör</button>`:''}
-        <button class="btn btn-primary btn-sm sl-start">Sınava Gir →</button>
+        <div class="sl-meta">${l.chapters?l.chapters.length:1} Ünite · Toplam ${qc} Soru</div>
+        <button class="btn btn-primary btn-sm sl-start">Üniteleri Gör →</button>
       </div>
     </div>`;
   }).join('');
 }
 
+function openStudentLesson(lessonId) {
+    activeLessonId = lessonId;
+    const l = lessons.find(x => x.id === lessonId);
+    document.getElementById('sc-title').textContent = l.emoji + ' ' + l.name;
+    const chapters = l.chapters && l.chapters.length ? l.chapters : [{id:'default', name:'Genel'}];
+
+    const grid = document.getElementById('sc-grid');
+    grid.innerHTML = chapters.map(c => {
+        const allQs = questions[lessonId] || [];
+        const cQs = allQs.filter(q => (q.chapterId || 'default') === c.id);
+        const allPdfs = lessonPdfs[lessonId] || [];
+        const cPdfs = allPdfs.filter(p => (p.chapterId || 'default') === c.id);
+
+        return `
+        <div class="sl-card">
+          <div class="sl-stripe" style="background:${l.color||'#ff5f3d'}"></div>
+          <div class="sl-body">
+            <div class="sl-name" style="font-size:16px; margin-bottom:8px;">📁 ${c.name}</div>
+            <div class="sl-meta" style="margin-bottom:14px;">${cQs.length} Soru · ${cPdfs.length} PDF Materyal</div>
+            ${cPdfs.length ? `<button class="btn btn-gold btn-sm" style="margin-bottom:8px;width:100%" onclick="event.stopPropagation();openStudentPdfs('${lessonId}', '${c.id}')">📄 Materyalleri Gör</button>` : ''}
+            <button class="btn btn-primary btn-sm sl-start" onclick="openExamCfg('${lessonId}', '${c.id}')">Sınava Gir →</button>
+          </div>
+        </div>`;
+    }).join('');
+    showPage('pg-student-chapters');
+}
+
 // ═══ EXAM ═══
-function openExamCfg(id){activeLessonId=id;openModal('mo-exam-cfg');}
+function openExamCfg(lessonId, chapterId){
+  activeLessonId=lessonId;
+  activeChapterId=chapterId;
+  openModal('mo-exam-cfg');
+}
 function pickCfg(el,k,v){el.parentElement.querySelectorAll('.cfg-item').forEach(c=>c.classList.remove('on'));el.classList.add('on');examCfg[k]=v;}
+
 async function startExam(){
-  const l=lessons.find(x=>x.id===activeLessonId),qs=questions[activeLessonId]||[];
-  if(!qs.length)return toast('Bu derste soru yok','err');
+  const l=lessons.find(x=>x.id===activeLessonId);
+  const allQs=questions[activeLessonId]||[];
+  const qs=allQs.filter(q=>(q.chapterId||'default')===activeChapterId);
+  
+  if(!qs.length)return toast('Bu ünitede soru yok','err');
+  
+  const cInfo = l.chapters.find(c => c.id === activeChapterId);
+  const titleName = l.name + ' - ' + (cInfo?cInfo.name:'');
+
   const shuffled=[...qs].sort(()=>Math.random()-0.5);
-  examState={lessonId:l.id,lessonName:l.name,questions:shuffled.slice(0,examCfg.count==='all'?shuffled.length:examCfg.count),answers:{},current:0,elapsed:0,timeLimit:examCfg.time*60,timer:null};
+  examState={lessonId:l.id,lessonName:titleName,questions:shuffled.slice(0,examCfg.count==='all'?shuffled.length:examCfg.count),answers:{},current:0,elapsed:0,timeLimit:examCfg.time*60,timer:null};
   closeModal('mo-exam-cfg');showPage('pg-exam');renderExamQ();startTimer();
 }
+
 function renderExamQ(){
   const {questions:qs,current:idx,answers}=examState,q=qs[idx];
   document.getElementById('ex-lesson-name').textContent=examState.lessonName;
@@ -1694,7 +1765,16 @@ function renderExamQ(){
 function pickAns(v){examState.answers[examState.current]=v;renderExamQ();}
 function exNext(){if(examState.current<examState.questions.length-1){examState.current++;renderExamQ();}}
 function exPrev(){if(examState.current>0){examState.current--;renderExamQ();}}
-function exitExam(){if(confirm('Sınavdan çıkmak istediğine emin misin?')){clearInterval(examState.timer);showPage(role==='admin'?'pg-lessons':'pg-student-home');if(role==='student')renderStudentHome();}}
+function exitExam(){
+    if(confirm('Sınavdan çıkmak istediğine emin misin?')){
+        clearInterval(examState.timer);
+        if(role==='admin') showPage('pg-lessons');
+        else {
+            showPage('pg-student-chapters');
+            openStudentLesson(activeLessonId); // Refresh chapters page
+        }
+    }
+}
 function startTimer(){
   if(examState.timeLimit===0)return document.getElementById('ex-timer').innerHTML='∞<small>süresiz</small>';
   examState.timer=setInterval(()=>{
@@ -1751,11 +1831,15 @@ function showReview(){
 }
 
 // ═══ UTILS ═══
-function openStudentPdfs(lessonId){
-  const pdfs=lessonPdfs[lessonId]||[];
-  if(!pdfs.length)return toast('Bu derste PDF materyal yok','info');
+function openStudentPdfs(lessonId, chapterId){
+  const allPdfs=lessonPdfs[lessonId]||[];
+  const pdfs=allPdfs.filter(p=>(p.chapterId||'default')===chapterId);
+
+  if(!pdfs.length)return toast('Bu ünitede materyal yok','info');
   const l=lessons.find(x=>x.id===lessonId);
-  document.getElementById('mo-student-pdfs-title').textContent=(l?l.emoji+' '+l.name:'Ders')+' — Materyaller';
+  const cInfo=l.chapters.find(c=>c.id===chapterId);
+  
+  document.getElementById('mo-student-pdfs-title').textContent=(l?l.emoji+' '+l.name:'Ders')+' — '+(cInfo?cInfo.name:'Materyaller');
   document.getElementById('mo-student-pdfs-list').innerHTML=pdfs.map(p=>`
     <div class="pdf-item">
       <div class="pdf-icon">📄</div>
